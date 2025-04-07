@@ -1,0 +1,512 @@
+table Fact_VacancyDetails
+	lineageTag: d4d6f0e8-3ca6-4ab9-b2b8-af75c99b603c
+
+	measure Maximum_Vacant_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			-- Sage Calculation
+			VAR MaxVacant_Sage = MAX('Fact_VacancyDetails'[Actual Vacant Days])
+			
+			-- Yardi Calculation
+			VAR MaxVacant_Yardi = MAX('Fact_VacancyDetails'[Days Vacant])
+			
+			-- Combined Calculation (if no selection)
+			VAR MaxVacant_Combined = MAX(MaxVacant_Sage, MaxVacant_Yardi)
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    MaxVacant_Combined, -- If no system is selected, return the max of both
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", MaxVacant_Sage,
+			        "Yardi", MaxVacant_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: d223205a-ba91-43e3-ab22-4c151d3b0ee7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Minimum_Vacant_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_VacancyDetails[Accounting Software])
+			
+			-- Sage Calculation (ignores zero values)
+			VAR MinDays_Sage = 
+			    CALCULATE(
+			        MIN('Fact_VacancyDetails'[Actual Vacant Days]), 
+			        'Fact_VacancyDetails'[Actual Vacant Days] > 0
+			    )
+			
+			-- Yardi Calculation (ignores zero and -17 values)
+			VAR MinDays_Yardi = 
+			    CALCULATE(
+			        MIN('Fact_VacancyDetails'[Days Vacant]), 
+			        'Fact_VacancyDetails'[Days Vacant] > 0 && 'Fact_VacancyDetails'[Days Vacant] <> -17
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no system is selected, show the minimum of both
+			    MINX(
+			        { MinDays_Sage, MinDays_Yardi }, 
+			        [Value]
+			    ),
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", MinDays_Sage,
+			        "Yardi", MinDays_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: be377fee-27a7-4167-822a-9a4d309bc8d8
+
+	measure Min_Vacant_Days_CM = CALCULATE([Minimum_Vacant_Days], DimDate[Date] = MAX('Fact_VacancyDetails'[Date]))
+		formatString: 0
+		lineageTag: 93bf774a-61d4-4a67-bc45-5e7cb11d97a5
+
+	measure Max_Vacant_Days_CM = ```
+			CALCULATE([Maximum_Vacant_Days], DimDate[Date] = MAX('Fact_VacancyDetails'[Date])) 
+			```
+		lineageTag: 51b59566-df77-4fe4-9534-aa2a47cd005f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Vacated_Units_CM = CALCULATE(COUNTX('Fact_VacancyDetails', 'Fact_VacancyDetails'[Community Description]), DimDate[Date] = MAX('Fact_VacancyDetails'[Date]))
+		formatString: 0
+		lineageTag: 86397a99-fe78-4473-9dfd-13424d57c28d
+
+	measure Average_Days_Vacant = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE('Fact_VacancyDetails'[Accounting Software])
+			
+			-- Sage Calculation
+			VAR AvgDays_Sage = 
+			    DIVIDE(
+			        SUM('Fact_VacancyDetails'[Actual Days Vacant]), 
+			        [Total_Units]
+			    )
+			
+			-- Yardi Calculation
+			VAR AvgDays_Yardi = 
+			    DIVIDE(
+			        SUM('Fact_VacancyDetails'[Days Vacant]), 
+			        [Total_Units]
+			    )
+			
+			-- Combined Calculation (if no selection)
+			VAR AvgDays_Combined = 
+			    DIVIDE(
+			        SUM('Fact_VacancyDetails'[Actual Days Vacant]) + SUM('Fact_VacancyDetails'[Days Vacant]), 
+			        [Total_Units]
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    AvgDays_Combined, -- If no system is selected, return the combined total
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", AvgDays_Sage,
+			        "Yardi", AvgDays_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 7d8bc95c-1925-470d-b4fd-7d4fd784f2a6
+
+	measure Avg_Vacant_Days_CM = CALCULATE([Average_Days_Vacant], DimDate[Date] = MAX('Fact_VacancyDetails'[Date]))
+		formatString: 0
+		lineageTag: 70206cb7-7dec-4031-be14-4d2123cb2d57
+
+	measure Vacant_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_VacancyDetails[Accounting Software])
+			
+			-- Define the columns to pull data from
+			VAR Vacantdays_Sage = SUM(Fact_VacancyDetails[Actual Vacant Days])  -- Sage's column
+			VAR Vacantdays_Yardi = SUM(Fact_VacancyDetails[Days Vacant])   -- Yardi's column
+			
+			RETURN 
+			IF(
+			    ISFILTERED(Fact_VacancyDetails[Accounting Software]), 
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", Vacantdays_Sage,
+			        "Yardi", Vacantdays_Yardi,
+			        BLANK()
+			    ),
+			    -- If no selection, show the sum of both
+			    Vacantdays_Sage + Vacantdays_Yardi
+			)
+			
+			```
+		lineageTag: 22efefa5-9792-403c-bac7-4ccdfb3f3074
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Vacancy %' = DIVIDE([Vacant_Units],[Total_Units])
+		lineageTag: 8ac6cf6a-2331-4888-a094-635e724d3ff9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Vacant_Units = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE('Fact_VacancyDetails'[Accounting Software])
+			
+			-- Sage: Use Vacancy Indicator from Rent Roll
+			VAR VacantUnits_Sage = SUM('Fact_RentRoll'[Vacancy Indicator])
+			
+			-- Yardi: Use Number of Units from Vacancy Details
+			VAR VacantUnits_Yardi = SUM('Fact_VacancyDetails'[No.ofUnits])
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no system is selected, return the total vacant units across both
+			    VacantUnits_Sage + VacantUnits_Yardi,
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", VacantUnits_Sage,
+			        "Yardi", VacantUnits_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: cc14bd29-d15c-49a7-abb5-ac8785e10e43
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Community Id'
+		dataType: string
+		lineageTag: 3935af96-1a75-46be-a072-c448ca6e4f1e
+		summarizeBy: none
+		sourceColumn: Community Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Community Description'
+		dataType: string
+		lineageTag: 4eca2762-9d9a-4ff5-a33f-b69d6a0a6072
+		summarizeBy: none
+		sourceColumn: Community Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Id'
+		dataType: int64
+		formatString: 0
+		lineageTag: 4179f18f-5786-46b8-b713-c0fb4fda8742
+		summarizeBy: count
+		sourceColumn: Unit Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Actual Vacancy Start Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2f6f0381-0a55-4dcd-93d5-f1ba280fc65d
+		summarizeBy: none
+		sourceColumn: Actual Vacancy Start Date
+
+		variation Variation
+			isDefault
+			relationship: d4fcbf70-60c1-4a31-bb35-161d55a5dae6
+			defaultHierarchy: LocalDateTable_8071758b-4a0b-4846-bae0-ba4277a802c4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Actual Vacancy End Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: db46ed5a-8c58-4d85-8936-b1717229ebc2
+		summarizeBy: none
+		sourceColumn: Actual Vacancy End Date
+
+		variation Variation
+			isDefault
+			relationship: 807d9878-3590-47e9-b4d9-e06b403eeb5c
+			defaultHierarchy: LocalDateTable_bc0541b1-0752-42f0-8891-e0b2ca75ede6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Actual Days Vacant'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e634eb1-d5cd-4e1c-9f3a-2b0101b41691
+		summarizeBy: sum
+		sourceColumn: Actual Days Vacant
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Next Indate'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 40193762-9a1d-4426-b436-2d4cc56722c4
+		summarizeBy: none
+		sourceColumn: Next Indate
+
+		variation Variation
+			isDefault
+			relationship: 291ffe88-4468-45c6-9fec-935a36df68a3
+			defaultHierarchy: LocalDateTable_3740658f-3c7b-4233-b2e0-6a500ad078eb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Period Vacancy Start Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 207178dc-34d3-45d1-ad86-a2c0b726b24b
+		summarizeBy: none
+		sourceColumn: Period Vacancy Start Date
+
+		variation Variation
+			isDefault
+			relationship: 748f2faa-b45a-4c4a-9c27-21df5e999600
+			defaultHierarchy: LocalDateTable_cbf4b87f-c154-4b77-804a-377b4a16c67d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Period Vacancy End Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7ab94828-8a42-4ca4-861a-34058a60fc5b
+		summarizeBy: none
+		sourceColumn: Period Vacancy End Date
+
+		variation Variation
+			isDefault
+			relationship: 73ebd49b-b023-4679-a78c-481d23836026
+			defaultHierarchy: LocalDateTable_55a175ed-9754-4a31-a67c-14dd48e4696a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Period Days Vacant'
+		dataType: int64
+		formatString: 0
+		lineageTag: e4b67e40-3586-4ec9-bab1-d23ae2f6d22f
+		summarizeBy: sum
+		sourceColumn: Period Days Vacant
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: 62e77e83-5f78-4fb6-a03e-ac922e64f68f
+		summarizeBy: none
+		sourceColumn: Unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Type'
+		dataType: string
+		lineageTag: 44c27f49-7ac0-40db-9039-1195d0b566b0
+		summarizeBy: none
+		sourceColumn: Unit Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resident
+		dataType: string
+		lineageTag: d223d112-37fc-4981-a88d-f4e99030eb73
+		summarizeBy: none
+		sourceColumn: Resident
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		lineageTag: 0d665699-b273-47d3-a48a-8d9c53ba3f1c
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Resident Rent'
+		dataType: string
+		lineageTag: d411b6f7-6f2d-4f6c-bfac-78faf35b371b
+		summarizeBy: none
+		sourceColumn: Resident Rent
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Rent'
+		dataType: string
+		lineageTag: bfbe904e-644d-44bf-abab-72de3522bfdd
+		summarizeBy: none
+		sourceColumn: Unit Rent
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Resident Deposit'
+		dataType: string
+		lineageTag: 6051b682-4a27-4689-a485-21804c372307
+		summarizeBy: none
+		sourceColumn: Resident Deposit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days Vacant'
+		dataType: double
+		lineageTag: 39e5916c-b388-482f-a1aa-67b569c9d00e
+		summarizeBy: sum
+		sourceColumn: Days Vacant
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Move In'
+		dataType: string
+		lineageTag: ba63e4d7-1e1f-48a2-8278-85cd50431ac6
+		summarizeBy: none
+		sourceColumn: Move In
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lease Sign'
+		dataType: string
+		lineageTag: 3bef9be6-38ef-48b8-bd49-6666268d90d7
+		summarizeBy: none
+		sourceColumn: Lease Sign
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lease From'
+		dataType: string
+		lineageTag: 422a4c24-338f-49da-b944-116ead8ab3e7
+		summarizeBy: none
+		sourceColumn: Lease From
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lease To'
+		dataType: string
+		lineageTag: c754956b-d733-43ec-8c7a-0229ceded4da
+		summarizeBy: none
+		sourceColumn: Lease To
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: a1e40174-64c0-4d4a-9c0d-f2ba2ac90bda
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Actual Vacant Days'
+		dataType: double
+		lineageTag: 3b475ef6-8424-4491-aae3-8c19093f6da9
+		summarizeBy: sum
+		sourceColumn: Actual Vacant Days
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Accounting Software'
+		dataType: string
+		lineageTag: b4046431-20e9-4875-8878-9d11d8cf7b20
+		summarizeBy: none
+		sourceColumn: Accounting Software
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'No.ofUnits'
+		dataType: int64
+		formatString: 0
+		lineageTag: aa6e29b5-57aa-47c4-8dec-be9e73f922f3
+		summarizeBy: sum
+		sourceColumn: No.ofUnits
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Building Number'
+		dataType: string
+		lineageTag: 3accba6b-ffbe-477b-b3fc-71c5f2c0221d
+		summarizeBy: none
+		sourceColumn: Building Number
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_VacancyDetails = m
+		mode: import
+		queryGroup: 'Rent Roll'
+		source = ```
+				let
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    Navigation = Table.SelectRows(Source, each Text.Contains([Name], "Vacancy", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files") or Text.Contains([Name], "Vacancy", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Yardi")),
+				    AccSoftCol = Table.AddColumn(Navigation, "Accounting Software", each if Text.Contains([Folder Path], "Yardi") then "Yardi" else "Sage"),
+				    #"Invoked Custom Function" = Table.AddColumn(AccSoftCol, "Tables", each if Text.Contains([Accounting Software], "Yardi") then Vacancy_Yardi([Content]) else Vacancy_Sage([Content])),
+				    DateColumn = Table.AddColumn(#"Invoked Custom Function", "Date", each
+				if Text.Contains([Accounting Software], "Sage") then
+				        let
+				            Date = Text.BetweenDelimiters([Name], "detail_", "."),
+				            Month = Number.From(Text.Start(Date, 2)),
+				            Year = 2000 + Number.From(Text.End(Date, 2)),
+				            Period = Date.EndOfMonth(#date(Year, Month, 1))
+				        in
+				            Period
+				else
+				        let
+				            Date = Text.BetweenDelimiters([Name], "-", "."),
+				            Month = Number.From(Text.Start(Date, 2)),
+				            Year = 2000 + Number.From(Text.End(Date, 2)),
+				            Period = Date.EndOfMonth(#date(Year, Month, 1))
+				        in
+				            Period,
+				type date
+				    ),
+				    #"Removed Other Columns" = Table.SelectColumns(DateColumn,{"Tables", "Date","Accounting Software"}),
+				    ColNames = let
+				ColumnNames = Table.AddColumn(#"Removed Other Columns", "ColumnNames", each Table.ColumnNames([Tables])),
+				ColNames = List.Distinct(List.Combine(ColumnNames[ColumnNames]))
+				in
+				ColNames,
+				    #"Expanded Tables" = Table.ExpandTableColumn(#"Removed Other Columns", "Tables", ColNames),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Tables",{{"Community Id", type text}, {"Community Description", type text}, {"Unit Id", Int64.Type}, {"Actual Vacancy Start Date", type datetime}, {"Actual Vacancy End Date", type datetime}, {"Actual Days Vacant", Int64.Type}, {"Next Indate", type datetime}, {"Period Vacancy Start Date", type datetime}, {"Period Vacancy End Date", type datetime}, {"Period Days Vacant", Int64.Type}, {"Unit", type any}, {"Unit Type", type any}, {"Resident", type any}, {"Name", type any}, {"Resident Rent", type any}, {"Unit Rent", type any}, {"Resident Deposit", type any}, {"Days Vacant", type number}, {"Move In", type any}, {"Lease Sign", type any}, {"Lease From", type any}, {"Lease To", type any}, {"Date", type date}, {"No.ofUnits", Int64.Type}}),
+				    AddedVacantDays = Table.AddColumn(
+				    #"Changed Type", 
+				    "Actual Vacant Days", 
+				    each 
+				    let
+				        EndDate = if [Next Indate] = null or Number.From([Next Indate]) > Number.From([Date]) 
+				                  then [Date] 
+				                  else Date.From([Next Indate]),
+				        Result = if [Next Indate] = null or Number.From([Date]) > Number.From(Date.From([Next Indate])) 
+				                 then Duration.Days(Date.From(EndDate) - Date.From([Actual Vacancy Start Date]))
+				                 else 0
+				    in
+				        Result,
+				    type number
+				)
+				in
+				    AddedVacantDays
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

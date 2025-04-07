@@ -1,0 +1,251 @@
+expression Delinquency_Yardi =
+		(CSV as binary) =>
+		let
+		    Source = Csv.Document(CSV,[Delimiter=",", Columns=14, Encoding=1252, QuoteStyle=QuoteStyle.Csv]),
+		    TableSkip = Table.Skip(Source, each not List.ContainsAny(Record.ToList(_),{"Charge"})),
+		    ColRenames = List.Transform(List.Zip({Record.ToList(TableSkip{0}), Record.ToList(TableSkip{1})}), each Text.Trim(Text.Combine(_, " "))),
+		    RenamedCols = Table.RenameColumns(TableSkip, List.Zip({Table.ColumnNames(TableSkip), ColRenames})),
+		    #"Prop&Ten_Cols" = let
+		        PropertyCol = Table.AddColumn(RenamedCols, "Community Description", each if Text.EndsWith([Tenant], ")") then Text.BeforeDelimiter([Tenant], " (") else null),
+		        TenantCol = Table.AddColumn(PropCodeCol, "Tenant Name", each if Text.StartsWith([Tenant], "(t") then Text.AfterDelimiter([Tenant], ") ") else null),
+		        PropCodeCol = Table.AddColumn(PropertyCol, "Community Id", each if Text.EndsWith([Tenant], ")") then Text.BetweenDelimiters([Tenant], " (", ")") else null),
+		        FillDown = Table.FillDown(TenantCol, {"Community Id", "Community Description", "Tenant Name"})
+		        in
+		        FillDown,
+		    FilteredRows = Table.SelectRows(#"Prop&Ten_Cols", each [Tenant Name] <> null and [Tenant Name] <> ""  and [Tenant] <> "" and not Text.Contains([Tenant],[Community Description]) and not Text.Contains([Tenant],[Tenant Name]) and not Text.Contains([Tenant], "Total"))
+		in
+		    FilteredRows
+	lineageTag: 86dfac7d-4365-404c-96f2-5d99466db0f5
+	queryGroup: 'AR Aging'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Delinquency_Sage =
+		(CSV as binary) =>
+		let
+		    TableTransform = Table.PromoteHeaders(Excel.Workbook(CSV)[Data]{0})
+		in
+		    TableTransform
+	lineageTag: ba4bdb51-96d5-42b2-aa1d-b8439be18516
+	queryGroup: 'AR Aging'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Rent_Yardi =
+		(CSV as binary) =>
+		let
+		    Source = Csv.Document(CSV),
+		    TableSkip = Table.Skip(Source, each not List.ContainsAny(Record.ToList(_), {"Unit"})),
+		    ColNewNames = List.Transform(List.Zip({Record.ToList(TableSkip{0}), Record.ToList(TableSkip{1})}), each Text.Trim(Text.Combine(_, " "))),
+		    RenamedCols = Table.RenameColumns(TableSkip, List.Zip({Table.ColumnNames(TableSkip), ColNewNames})),
+		    #"PropertyName&CodeCols" = let
+		        PropertyName = Table.AddColumn(RenamedCols, "Community Name", each if Text.Contains([Resident], "Total") then Text.BeforeDelimiter([Name], "(") else null),
+		        PropertyCode = Table.AddColumn(PropertyName, "Community Id", each if Text.Contains([Resident], "Total") then Text.BetweenDelimiters([Name], "(", ")") else null),
+		        Unit_des = Table.AddColumn(PropertyCode, "Unit Description", each if Value.Is(Value.FromText(Text.Middle(Text.Trim([Unit]), 0, 1)),type number) then null else [Unit]),
+		        FillUp = Table.FillUp(Unit_des, {"Community Name", "Community Id"}),
+		        FillDown = Table.FillDown(FillUp,{"Unit Description"})
+		        in
+		        FillDown,
+		    RemovedRows = Table.SelectRows(#"PropertyName&CodeCols", each [Unit Type] <> null and [Unit Type] <> "" and not Text.Contains([Unit], "Unit"))
+		in
+		    RemovedRows
+	lineageTag: 03053c1f-882e-4a47-8b8a-b6f16da6236f
+	queryGroup: 'Rent Roll'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Rent_Sage =
+		(CSV as binary) =>
+		let
+		    Source = Table.PromoteHeaders(Excel.Workbook(CSV)[Data]{0})
+		in
+		    Source
+	lineageTag: 2ddc072e-875b-4670-8f1b-716d5e6fafab
+	queryGroup: 'Rent Roll'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Vacancy_Yardi =
+		(CSV as binary) =>
+		let
+		    Source = Csv.Document(CSV),
+		    TableSkip = Table.Skip(Source, each not List.ContainsAny(Record.ToList(_), {"Unit"})),
+		    NewColNames = List.Transform(List.Zip({Record.ToList(TableSkip{0}), Record.ToList(TableSkip{1})}), each Text.Trim(Text.Combine(_, " "))),
+		    RenamedCols = Table.RenameColumns(TableSkip, List.Zip({Table.ColumnNames(TableSkip), NewColNames})),
+		    PropertyName_IdCols = let
+		        PropertyName = Table.AddColumn(RenamedCols, "Community Description", each if Text.Contains([Unit],"(") then Text.BeforeDelimiter([Unit], "(") else null),
+		        PropertyCode = Table.AddColumn(PropertyName, "Community Id", each if Text.Contains([Unit],"(") then Text.BetweenDelimiters([Unit], "(", ")") else null),
+		        FillDown = Table.FillDown(PropertyCode, {"Community Description", "Community Id"})
+		        in
+		        FillDown,
+		    FilteredRows = Table.SelectRows(PropertyName_IdCols, each [Unit] <> null and [Unit] <> "" and [Community Description] <> null and not Text.Contains([Unit], "Total", Comparer.OrdinalIgnoreCase) and not Text.Contains([Unit], [Community Description])),
+		    Addcol = Table.AddColumn(#"FilteredRows", "No.ofUnits", each if [Unit Type] <> null then "1" else 0)
+		in
+		    Addcol
+	lineageTag: 79e89f8f-7423-4968-9537-c43cc4b3aa71
+	queryGroup: 'Rent Roll'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Vacancy_Sage =
+		(Xlsx as binary) =>
+		let
+		    Source = Table.PromoteHeaders(Excel.Workbook(Xlsx)[Data]{0})
+		in
+		    Source
+	lineageTag: 7f7f23a1-94ff-4592-85f3-27b434bf47ea
+	queryGroup: 'Rent Roll'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression DepositSummary_yardi = ```
+		let
+		    Source = (Parameter5 as binary) => let
+		        // Load CSV file
+		        Source = Csv.Document(Parameter5, [Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		
+		        // Skip rows until we find "Name" in Column1
+		        Custom1 = Table.Skip(Source, each Record.Field(_, "Column1") <> "Name"),
+		
+		        // Promote first row as headers
+		        #"Promoted Headers" = Table.PromoteHeaders(Custom1, [PromoteAllScalars=true]),
+		
+		        // Trim spaces in Date column
+		        TrimmedDate = Table.TransformColumns(#"Promoted Headers", {{"Date", each Text.Trim(Text.From(_)), type text}}),
+		
+		        // Split Date column into three parts
+		        SplitDate = Table.SplitColumn(TrimmedDate, "Date", Splitter.SplitTextByDelimiter("/", QuoteStyle.Csv), {"Date.1", "Date.2", "Date.3"}),
+		
+		        // Convert Date Parts to Proper Date Format
+		        FixedDate = Table.AddColumn(
+		            SplitDate, 
+		            "Date", 
+		            each try 
+		                if ([Date.1] <> null and [Date.2] <> null and [Date.3] <> null) then
+		                    let
+		                        Y = Number.From([Date.3]),
+		                        M = Number.From([Date.1]),
+		                        D = Number.From([Date.2])
+		                    in
+		                        if (Y > 1900 and M <= 12 and D <= 31) then #date(Y, M, D) else null
+		                else null
+		            otherwise null,
+		            type date
+		        ),
+		
+		        // Remove extra columns
+		        #"Removed Columns" = Table.RemoveColumns(FixedDate, {"Date.1", "Date.2", "Date.3"}),
+		
+		        // Add End of Month Column
+		        Custom2 = Table.AddColumn(#"Removed Columns", "End of Month", each try Date.EndOfMonth(Date.From([Period])) otherwise null, type date),
+		
+		        // Lookup Property Description from Dim_Regionals table
+		        Custom3 = Table.AddColumn(Custom2, "Property Description", 
+		            each try 
+		                let
+		                    Lookup = Table.SelectRows(Dim_Regionals, (row) => Text.Trim(Text.From(row[Sage ID])) = Text.Trim(Text.From(_[Property])))
+		                in
+		                    if Table.RowCount(Lookup) > 0 then Lookup{0}[Final Name] else null
+		            otherwise null
+		        )
+		    in
+		        Custom3
+		in
+		    Source
+		```
+	lineageTag: 1ee33bb8-9647-45c5-84ad-80c49bb1dd32
+	queryGroup: 'Cash Receipt Journal'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Cash_Receipt_Journal_Sage =
+		let
+		    Source = (CSV as binary) =>
+		let
+		    Source = Table.RenameColumns(Csv.Document(CSV),ColumnRenames)
+		in
+		    Source
+		in
+		    Source
+	lineageTag: 4d2583da-fbcb-4173-8106-71e09719d605
+	queryGroup: 'Cash Receipt Journal'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Yardi_TB = ```
+		(xlsx as binary) =>
+		let
+		    Transform = Excel.Workbook(xlsx){[Kind = "Sheet"]}[Data],
+		    PromoteHeaders = Table.PromoteHeaders(Table.Skip(Transform, each not List.ContainsAny(Record.ToList(_), {"Total"}))),    
+		    PropNameCol = Table.AddColumn(PromoteHeaders, "Location name", each Text.BeforeDelimiter(Transform[Column1]{0}, " (")),
+		    PropCodeCol = Table.AddColumn(PropNameCol, "Location ID", each Text.BetweenDelimiters(Transform[Column1]{0}, "(", ")")),
+		    Unpivot = Table.UnpivotOtherColumns(PropCodeCol, {"Location name", "Location ID", "Column1", "Column2"}, "Period", "Amount"),
+		    RenamedCols = Table.RenameColumns(Unpivot,{{"Column1", "Account no."}, {"Column2", "Account title"}, {"Location ID", "Location"}, {"Location name", "Location title"}}, MissingField.Ignore),
+		    MergedGlMap = Table.NestedJoin(RenamedCols, {"Account no."}, Merged_GlMap, {"Column2"}, "Dim_GlMap", JoinKind.LeftOuter),
+		    ExpandedDim_GlMap = Table.ExpandTableColumn(MergedGlMap, "Dim_GlMap", {"Primary Key"}, {"Primary Key"}),
+		    Trim = Table.TransformColumns(ExpandedDim_GlMap, {}, each try Text.Trim(Text.Clean(_)) otherwise _)
+		in
+		    Trim
+		```
+	lineageTag: 712193c7-084f-4f59-a6c9-437739d86f33
+	queryGroup: 'Financial Statements'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression Sage_TB =
+		(Csv as binary) =>
+		let
+		    TableTransform = Table.PromoteHeaders(Table.TransformColumns(Csv.Document(Csv),{}, each Text.Trim(Text.Clean(_)))),
+		    ColRename = Table.RenameColumns(TableTransform, {{"Account", "Account no."}, {"Location ID", "Location"}, {"Location name", "Location title"}}, MissingField.Ignore),
+		    MergedGlMap = Table.NestedJoin(ColRename, {"Account no."}, Merged_GlMap, {"Column2"}, "Merged_GlMap", JoinKind.LeftOuter),
+		    ExpandedDim_GlMap = Table.ExpandTableColumn(MergedGlMap, "Merged_GlMap", {"Primary Key"}, {"Primary Key"})
+		in
+		 ExpandedDim_GlMap
+	lineageTag: 36e99638-fedb-440f-9ac1-efc9b7bbe410
+	queryGroup: 'Financial Statements'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression 'Errors in Aging_Receiveable' =
+		let
+		Source = Aging_Receiveable,
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Community Id", "Community Description", "Unit Id", "Building Apartment Number", "Household Id", "Tenant Name", "Household Active", "household_total_due", "Balance Type  Description", "current_amt", "over_30", "over_60", "over_90", "over_120", "Tenant", "Tran#", "Date", "Month", "Charge Code", "Charge Amount", "Current Owed", "0-30 Owed", "31-60 Owed", "61-90 Owed", "Over 90 Owed", "Pre- payments", "Suspense", "Remarks", "Period", "Accounting Software", "Unapplied Tenants", "Priority", "Days", "Balance_Type_Description"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Community Id", "Community Description", "Unit Id", "Building Apartment Number", "Household Id", "Tenant Name", "Household Active", "household_total_due", "Balance Type  Description", "current_amt", "over_30", "over_60", "over_90", "over_120", "Tenant", "Tran#", "Date", "Month", "Charge Code", "Charge Amount", "Current Owed", "0-30 Owed", "31-60 Owed", "61-90 Owed", "Over 90 Owed", "Pre- payments", "Suspense", "Remarks", "Period", "Accounting Software", "Unapplied Tenants", "Priority", "Days", "Balance_Type_Description"})
+		in
+		  #"Reordered Columns"
+	lineageTag: 653831a7-8963-49ab-b346-9fc6e3b7d5fe
+	queryGroup: 'Query Errors - 03/27/2025 20:15:44'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

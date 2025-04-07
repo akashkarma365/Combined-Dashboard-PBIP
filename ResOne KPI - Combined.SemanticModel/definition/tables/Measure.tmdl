@@ -1,0 +1,278 @@
+table Measure
+	lineageTag: e183416b-1e6a-48fc-98ed-f5f275175ce1
+
+	measure 'Ranked NOI (Actual - Budget)' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [NOI_(Actual - Budget)], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [NOI_(Actual - Budget)], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [NOI_(Actual - Budget)], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [NOI_(Actual - Budget)], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [NOI_(Actual - Budget)], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [NOI_(Actual - Budget)], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [NOI_(Actual - Budget)], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [NOI_(Actual - Budget)], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [NOI_(Actual - Budget)], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [NOI_(Actual - Budget)], BLANK()))
+			
+			```
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: c19cec11-368d-40fd-8442-096a26de76dd
+
+	measure Top = 1
+		formatString: 0
+		lineageTag: da6ab971-dc9f-406c-9692-9bfca3ac8a35
+
+	measure Bottom = 0
+		formatString: 0
+		lineageTag: d538af7a-d356-4b22-940d-35a7efc30632
+
+	measure 'Ranked DSCR' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [DSCR], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [DSCR], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [DSCR], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [DSCR], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [DSCR], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [DSCR], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [DSCR], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [DSCR], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [DSCR], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [DSCR], BLANK())) 
+			
+			```
+		formatString: 0.00
+		lineageTag: 3faf604a-4414-4659-8eb5-05d8e07ffbcd
+
+	measure 'Ranked Occupancy' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [Occupancy %], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [Occupancy %], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [Occupancy %], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [Occupancy %], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [Occupancy %], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [Occupancy %], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [Occupancy %], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [Occupancy %], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [Occupancy %], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [Occupancy %], BLANK()))
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 04ecf2a3-8171-4fc1-bc9d-0869bed329b8
+
+	measure 'Ranked Collection Efficiency' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [Collection_Efficiency], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [Collection_Efficiency], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [Collection_Efficiency], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [Collection_Efficiency], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [Collection_Efficiency], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [Collection_Efficiency], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [Collection_Efficiency], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [Collection_Efficiency], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [Collection_Efficiency], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [Collection_Efficiency], BLANK()))
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bd3e7258-bfdb-49f0-85ae-fd2ff5651229
+
+	measure 'Ranked DSCR Title' =
+			
+			VAR Category = SWITCH(SELECTEDVALUE(Category[Category Order]), 0, "Properties", 1, "Managers", 2, "Regionals", 3, "Owners", "Properties")
+			VAR Parameter = SWITCH(SELECTEDVALUE(Parameter[Parameter Order]), 0, "Top", 1, "Bottom", "Top")
+			VAR Range = SELECTEDVALUE('TopN'[TopN])
+			RETURN
+			IF(Range = 0, "DSCR by " & Category, Parameter & " " & Range & " " & Category & " by DSCR")
+		lineageTag: 0248939a-102f-48e8-8209-b150f5834901
+
+	measure 'Ranked Delinquent > 90 Days' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [Delinquent_Over_90_Days], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [Delinquent_Over_90_Days], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [Delinquent_Over_90_Days], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [Delinquent_Over_90_Days], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [Delinquent_Over_90_Days], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [Delinquent_Over_90_Days], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [Delinquent_Over_90_Days], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [Delinquent_Over_90_Days], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [Delinquent_Over_90_Days], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [Delinquent_Over_90_Days], BLANK()))
+			
+			```
+		lineageTag: 13efe53a-155e-43b3-ac89-1bce06b26e68
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Ranked Delinquent > 30 Days' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [Delinquent_Over_30_Days], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [Delinquent_Over_30_Days], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [Delinquent_Over_30_Days], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [Delinquent_Over_30_Days], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [Delinquent_Over_30_Days], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [Delinquent_Over_30_Days], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [Delinquent_Over_30_Days], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [Delinquent_Over_30_Days], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [Delinquent_Over_30_Days], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [Delinquent_Over_30_Days], BLANK()))
+			
+			```
+		lineageTag: 23255130-1459-46a6-94e1-72d5f946fef1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Ranked NOI (Actual - Budget) Title' =
+			
+			VAR Category = SWITCH(SELECTEDVALUE(Category[Category Order]), 0, "Properties", 1, "Managers", 2, "Regionals", 3, "Owners", "Properties")
+			VAR Parameter = SWITCH(SELECTEDVALUE(Parameter[Parameter Order]), 0, "Top", 1, "Bottom", "Top")
+			VAR Range = SELECTEDVALUE('TopN'[TopN])
+			RETURN
+			IF(Range = 0, "Total NOI (Actual - Budget) by " & Category, Parameter & " " & Range & " " & Category & " by Total NOI (Actual - Budget)")
+		lineageTag: f0509a68-1350-4fce-bbd7-95295580595a
+
+	measure 'Ranked Occupancy Title' =
+			
+			VAR Category = SWITCH(SELECTEDVALUE(Category[Category Order]), 0, "Properties", 1, "Managers", 2, "Regionals", 3, "Owners", "Properties")
+			VAR Parameter = SWITCH(SELECTEDVALUE(Parameter[Parameter Order]), 0, "Top", 1, "Bottom", "Top")
+			VAR Range = SELECTEDVALUE('TopN'[TopN])
+			RETURN
+			IF(Range = 0, "Total Occupancy by " & Category, Parameter & " " & Range & " " & Category & " by Total Occupancy")
+		lineageTag: 1c488bbc-1b0c-4b2e-9d6f-26604a0204ee
+
+	measure 'Ranked Collection Title' =
+			
+			VAR Category = SWITCH(SELECTEDVALUE(Category[Category Order]), 0, "Properties", 1, "Managers", 2, "Regionals", 3, "Owners", "Properties")
+			VAR Parameter = SWITCH(SELECTEDVALUE(Parameter[Parameter Order]), 0, "Top", 1, "Bottom", "Top")
+			VAR Range = SELECTEDVALUE('TopN'[TopN])
+			RETURN
+			IF(Range = 0, "Collection Efficiency by " & Category, Parameter & " " & Range & " " & Category & " by Collection Efficiency")
+		lineageTag: b6a757e3-c0cd-4dc8-a0e4-dca74ce9f0d3
+
+	measure 'Ranked Delinquent > 90 Days Title' =
+			
+			VAR Category = SWITCH(SELECTEDVALUE(Category[Category Order]), 0, "Properties", 1, "Managers", 2, "Regionals", 3, "Owners", "Properties")
+			VAR Parameter = SWITCH(SELECTEDVALUE(Parameter[Parameter Order]), 0, "Top", 1, "Bottom", "Top")
+			VAR Range = SELECTEDVALUE('TopN'[TopN])
+			RETURN
+			IF(Range = 0, "Delinquent > 90 Days by " & Category, Parameter & " " & Range & " " & Category & " by Delinquent > 90 Days")
+		lineageTag: 7a8ae91c-8a59-4045-8a4b-6630096d48b8
+
+	measure 'Ranked Delinquent > 30 Days Title' =
+			
+			VAR Category = SWITCH(SELECTEDVALUE(Category[Category Order]), 0, "Properties", 1, "Managers", 2, "Regionals", 3, "Owners", "Properties")
+			VAR Parameter = SWITCH(SELECTEDVALUE(Parameter[Parameter Order]), 0, "Top", 1, "Bottom", "Top")
+			VAR Range = SELECTEDVALUE('TopN'[TopN])
+			RETURN
+			IF(Range = 0, "Delinquent > 30 Days by " & Category, Parameter & " " & Range & " " & Category & " by Delinquent > 30 Days")
+		lineageTag: 5e91a2a1-d994-41a4-a3e8-aeeeda5eb41c
+
+	measure 'Dashboard Title' = "Updated till " & FORMAT(MAX('Fact_TB'[Date]), "MMM - YYYY")
+		lineageTag: f2520882-f23d-4728-b0af-8c58852cc9f1
+
+	measure 'Marker Value' =
+			
+			VAR NOI = MAX([NOI],Fact_Budget[Budgeted_NOI])
+			VAR Rent = MAX([Rent_], Fact_Budget[Budget_Rent])
+			VAR ControllableExp = MAX([Controllable_Op_Exp], Fact_Budget[Budgeted_Controllable_Exp])
+			RETURN
+			SWITCH(SELECTEDVALUE('Actuals Vs Budget'[Actuals Vs Budget Order]), 0, NOI, 1, Rent, 2, ControllableExp, NOI)
+		lineageTag: 97aa31b3-8625-4a9a-afd7-5baefd13c1d6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Bar =
+			
+			VAR NOI = IF([NOI] < 0, 0, MIN([NOI], Fact_Budget[Budgeted_NOI]))
+			VAR Rent = IF([Rent_] < 0, 0, MIN([Rent_],Fact_Budget[Budget_Rent]))
+			VAR ControllableExp = IF([Controllable_Op_Exp] < 0, 0, MIN([Controllable_Op_Exp], Fact_Budget[Budgeted_Controllable_Exp]))
+			RETURN
+			SWITCH(SELECTEDVALUE('Actuals Vs Budget'[Actuals Vs Budget Order]), 0, NOI, 1, Rent, 2, ControllableExp, NOI)
+		lineageTag: 3512f178-f184-4b40-b0a7-47c92f2e4256
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Unmet Bar' = ```
+			
+			VAR NOI = IF(Fact_Budget[Budgeted_NOI] > [NOI], [Marker Value] - [Bar]) 
+			VAR Rent = IF(Fact_Budget[Budget_Rent] > [Rent_], [Marker Value] - [Bar])
+			VAR ControllableExp = IF(Fact_Budget[Budgeted_Controllable_Exp] > [Controllable_Op_Exp], [Marker Value] - [Bar])
+			RETURN
+			SWITCH(SELECTEDVALUE('Actuals Vs Budget'[Actuals Vs Budget Order]), 0, NOI, 1, Rent, 2, ControllableExp, NOI)
+			```
+		lineageTag: c354a13f-cac5-4dcc-94c5-64a858820783
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Met Bar' =
+			
+			VAR NOI = IF([NOI] >= Fact_Budget[Budgeted_NOI], [Marker Value] - [Bar])
+			VAR Rent = IF([Rent_] >= Fact_Budget[Budget_Rent], [Marker Value] - [Bar])
+			VAR ControllableExp = IF([Controllable_Op_Exp] >= Fact_Budget[Budgeted_Controllable_Exp], [Marker Value] - [Bar])
+			RETURN
+			SWITCH(SELECTEDVALUE('Actuals Vs Budget'[Actuals Vs Budget Order]), 0, NOI, 1, Rent, 2, ControllableExp, NOI)
+		lineageTag: 7a30ac3d-7d35-4ee9-94bc-c45a8f854754
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Ranked Average Rent' = ```
+			
+			VAR SortOrder = IF(SELECTEDVALUE(Parameter[Parameter Order]) = 0, TRUE(), FALSE())
+			VAR PropertyRankTop = RANKX(ALL(Dim_Regionals[Final Name]), [Average_Rent], , DESC, DENSE)
+			VAR RegionalRankTop = RANKX(ALL(Dim_Regionals[Regional]), [Average_Rent], , DESC, DENSE)
+			VAR ManagerRankTop = RANKX(ALL(Dim_Regionals[Manager]), [Average_Rent], , DESC, DENSE)
+			VAR OwnerRankTop = RANKX(ALL(Dim_Regionals[Owner]), [Average_Rent], , DESC, DENSE)
+			VAR PropertyRankBottom = RANKX(ALL(Dim_Regionals[Final Name]), [Average_Rent], , ASC, DENSE)
+			VAR RegionalRankBottom = RANKX(ALL(Dim_Regionals[Regional]), [Average_Rent], , ASC, DENSE)
+			VAR ManagerRankBottom = RANKX(ALL(Dim_Regionals[Manager]), [Average_Rent], , ASC, DENSE)
+			VAR OwnerRankBottom = RANKX(ALL(Dim_Regionals[Owner]), [Average_Rent], , ASC, DENSE)
+			VAR SelectedCategory = SELECTEDVALUE(Category[Category Order])
+			VAR ConditionTop = SWITCH(SelectedCategory, 0, PropertyRankTop, 1, ManagerRankTop, 2, RegionalRankTop, 3, OwnerRankTop, PropertyRankTop)
+			VAR ConditionBottom = SWITCH(SelectedCategory, 0, PropertyRankBottom, 1, ManagerRankBottom, 2, RegionalRankBottom, 3, OwnerRankBottom, PropertyRankBottom)
+			RETURN
+			IF('TopN'[TopN Value] = 0, [Average_Rent], IF(IF(SortOrder, ConditionTop, ConditionBottom) <= 'TopN'[TopN Value], [Average_Rent], BLANK())) 
+			
+			```
+		lineageTag: b042b830-cf8d-4843-99a4-04bfef897a7d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Column
+		formatString: 0
+		lineageTag: ac6d269e-39cc-4bd1-8c40-0f1091787160
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Measure = calculated
+		mode: import
+		source = Row("Column", BLANK())
+
+	annotation PBI_Id = 4504565072934262a77b06821d656a99
+

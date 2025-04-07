@@ -1,0 +1,119 @@
+table Dim_Unapplied
+	isHidden
+	lineageTag: b3b8bf13-a7b8-4b5d-ad47-b898c6483862
+
+	column 'Tenant Name'
+		dataType: string
+		isHidden
+		lineageTag: 789bd094-90cf-40d9-8d1a-778e1e935edc
+		summarizeBy: none
+		sourceColumn: Tenant Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: e5631ae2-a677-4aa4-bd70-1abf6bd67731
+		summarizeBy: none
+		sourceColumn: Period
+
+		variation Variation
+			isDefault
+			relationship: f0205928-bc7f-4c78-8035-59de7bbe675f
+			defaultHierarchy: LocalDateTable_9d9260b8-e4da-4f1e-8270-fd236603d81f.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Priority
+		dataType: string
+		isHidden
+		lineageTag: c7556984-31c7-440b-b394-fcd0b7870800
+		summarizeBy: none
+		sourceColumn: Priority
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnappliedCheck
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 928e6420-2d5c-4bfe-92a5-8255f126a640
+		summarizeBy: none
+		sourceColumn: UnappliedCheck
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Unapplied = m
+		mode: import
+		queryGroup: 'AR Aging'
+		source = ```
+				let
+				    // Connected to SharePoint
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    // Filtered files in "ar aging" folder (case-insensitive)
+				    Navigation = Table.SelectRows(Source, each Text.Contains([Folder Path], "ar aging", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files")),
+				    // Loaded and promoted headers from Excel files
+				    TableTransform = Table.TransformColumns(Navigation,{"Content", each Table.PromoteHeaders(Excel.Workbook(_)[Data]{0})}),
+				    // Added "Period" column from file names
+				    PeriodColumn = Table.AddColumn(TableTransform, "Period", each 
+				    let 
+				        ReportDate = Text.Trim(Text.BetweenDelimiters([Name], "aging_", ".")),
+				        Year = 2000 + Number.From(Text.End(ReportDate, 2)),
+				        Month = Number.From(Text.Start(ReportDate, 2)),
+				        Date = Date.EndOfMonth(#date(Year, Month, 1))
+				    in
+				        Date, type date),
+				    // Selected relevant columns and added "Priority" column based on conditions
+				    RemovedOtherColumns = Table.TransformColumns(
+				        Table.SelectColumns(PeriodColumn, {"Content", "Period"}),
+				        {"Content", each Table.AddColumn(_, "Priority", each 
+				            if [over_120] <> 0 then "P1" 
+				            else if [over_90] <> 0 then "P1" 
+				            else if Text.Contains([Balance Type  Description], "Unapplied Subsidy") then "P1" 
+				            else if [over_60] <> 0 then "P2" 
+				            else if ([over_120] + [over_90] + [over_60] + [over_30] + [current_amt]) <= -1000 then "P3" 
+				            else "P4"
+				        )}
+				    ),
+				    // Expanded "Content" column to include selected columns
+				    ExpandedContent = Table.ExpandTableColumn(RemovedOtherColumns, "Content", {"Tenant Name", "Balance Type  Description", "Priority"}, {"Tenant Name", "Balance Type  Description", "Priority"}),
+				    // Grouped rows by "Tenant Name" and "Period"
+				    GroupedRows = Table.Group(
+				        ExpandedContent, 
+				        {"Tenant Name", "Period"}, 
+				        {
+				            // Created "Unapplied Check" column
+				            {"UnappliedCheck", each List.Contains([Balance Type  Description], "Unapplied", Text.Contains)},
+				            // Created "Priority" column based on unapplied priorities
+				            {"Priority", each 
+				                let
+				                    UnappliedPriorities = List.Select(
+				                        List.Zip({[Priority], [Balance Type  Description]}),
+				                        each Text.Contains(_{1}, "Unapplied")
+				                    ),
+				                    SortedPriorities = List.Sort(List.Transform(UnappliedPriorities, each _{0}), Order.Ascending)
+				                in
+				                    if List.Count(SortedPriorities) > 0 then List.First(SortedPriorities) else null
+				            }
+				        }
+				    ),
+				    #"Changed Type" = Table.TransformColumnTypes(GroupedRows,{{"Tenant Name", type text}, {"Period", type date}, {"UnappliedCheck", type logical}, {"Priority", type text}})
+				in
+				    #"Changed Type"
+				```
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

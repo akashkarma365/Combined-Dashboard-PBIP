@@ -1,0 +1,129 @@
+table Dim_Regionals
+	lineageTag: bac4fb26-7c75-469d-b198-098ef5ac172b
+
+	measure 'Property Count' = Calculate(DISTINCTCOUNT(Dim_Regionals[Sage Name]), RELATEDTABLE('Fact_TB'))
+		formatString: 0
+		lineageTag: 9f0388e1-54b4-45b8-a385-6fafac1af250
+
+	measure 'Regional Count' = CALCULATE(DISTINCTCOUNT(Dim_Regionals[Regional]), RELATEDTABLE('Fact_TB'))
+		formatString: 0
+		lineageTag: f4b6cb30-f048-4f1e-917a-338e048d0dcc
+
+	measure 'Manager Count' = CALCULATE(DISTINCTCOUNT(Dim_Regionals[Manager]), RELATEDTABLE('Fact_TB'))
+		formatString: 0
+		lineageTag: afee98e6-24a2-4722-bf21-ffa6739d19f1
+
+	measure 'Owner Count' = CALCULATE(DISTINCTCOUNT(Dim_Regionals[Owner]), RELATEDTABLE('Fact_TB'))
+		formatString: 0
+		lineageTag: 8ec31680-8cee-446b-a46d-de2b3e389379
+
+	column Manager
+		dataType: string
+		lineageTag: c30388f0-afd6-41a1-a3fe-82651d60d8a6
+		summarizeBy: none
+		sourceColumn: Manager
+
+		annotation SummarizationSetBy = Automatic
+
+	column Regional
+		dataType: string
+		lineageTag: 1f6f685c-57c6-4e4f-a70e-ada619fda903
+		summarizeBy: none
+		sourceColumn: Regional
+
+		annotation SummarizationSetBy = Automatic
+
+	column Owner
+		dataType: string
+		lineageTag: 6159be4e-381f-4837-85e0-571a1ab939f5
+		summarizeBy: none
+		sourceColumn: Owner
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sage ID'
+		dataType: string
+		lineageTag: 7c4cba04-d612-4efa-a9e6-023efe987355
+		summarizeBy: none
+		sourceColumn: Sage ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sage Name'
+		dataType: string
+		lineageTag: 9b090451-dbec-43ac-9930-8be2e0746343
+		summarizeBy: none
+		sourceColumn: Sage Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Boston Id'
+		dataType: string
+		lineageTag: e964e015-da4c-45cf-99e9-39e2c0373702
+		summarizeBy: none
+		sourceColumn: Boston Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Boston Name'
+		dataType: string
+		lineageTag: 78c2c9b8-4ae4-4250-8901-5f94acfc74ff
+		summarizeBy: none
+		sourceColumn: Boston Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Final Name'
+		dataType: string
+		lineageTag: a7543156-1417-48ad-b086-e2dbd816a586
+		summarizeBy: none
+		sourceColumn: Final Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: 8c269b6d-3f48-4a41-9f0b-6e22220c3a1c
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Residential One Directory'
+		dataType: string
+		lineageTag: f415b735-8312-4a47-a713-2114547aacdd
+		summarizeBy: none
+		sourceColumn: Residential One Directory
+
+		annotation SummarizationSetBy = Automatic
+
+	column Software
+		dataType: string
+		lineageTag: 713ea8b0-7cfd-487c-a313-05f7a987a317
+		summarizeBy: none
+		sourceColumn: Software
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: ab3b2507-77e5-48e3-8c76-805016afb3d3
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Regionals = m
+		mode: import
+		source =
+				let
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    Navigation = Table.PromoteHeaders(Excel.Workbook(Table.SelectRows(Source, each Text.Contains([Name], "Community Details", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files")){[Extension = ".xlsx"]}[Content])[Data]{0}),
+				    #"Filtered Rows" = Table.SelectRows(Navigation, each [Sage ID] <> null and [Sage ID] <> "")
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

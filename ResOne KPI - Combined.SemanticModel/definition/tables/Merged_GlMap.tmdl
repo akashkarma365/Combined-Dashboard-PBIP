@@ -1,0 +1,118 @@
+table Merged_GlMap
+	lineageTag: ffcdf4cc-0656-4e4c-b039-cd9e296d9e27
+
+	column 'Name.1'
+		dataType: string
+		lineageTag: c36534e5-c7d0-484b-8a87-07e4adba174f
+		summarizeBy: none
+		sourceColumn: Name.1
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column2
+		dataType: string
+		lineageTag: 701c1284-8d6d-4e0a-9d57-656a2f07cea0
+		summarizeBy: none
+		sourceColumn: Column2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Primary Key'
+		dataType: string
+		lineageTag: 2f570920-ecbf-4fa0-97e7-b25baf69eab0
+		summarizeBy: none
+		sourceColumn: Primary Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column G1
+		dataType: string
+		lineageTag: 85819540-3069-49d5-9c12-ec6ddb612690
+		summarizeBy: none
+		sourceColumn: G1
+
+		annotation SummarizationSetBy = Automatic
+
+	column G2
+		dataType: string
+		lineageTag: 9db530a6-d59d-4df7-8518-441724e9db6a
+		summarizeBy: none
+		sourceColumn: G2
+
+		annotation SummarizationSetBy = Automatic
+
+	column G3
+		dataType: string
+		lineageTag: 9ebb86e1-d836-45a0-b9d1-637c983bcece
+		summarizeBy: none
+		sourceColumn: G3
+
+		annotation SummarizationSetBy = Automatic
+
+	column G4
+		dataType: string
+		lineageTag: 4c4e4efe-6a52-4bab-aca1-0875e4ebfa75
+		summarizeBy: none
+		sourceColumn: G4
+
+		annotation SummarizationSetBy = Automatic
+
+	column G5
+		dataType: string
+		lineageTag: 32b10bdc-1947-4793-908e-c24caaf224d0
+		summarizeBy: none
+		sourceColumn: G5
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		lineageTag: 623710ee-dca7-4ebc-a5b1-284bc2df847e
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column G0 = If(Merged_GlMap[Name.1] = "Income Statement", IF(Merged_GlMap[G1] IN {"Operating Income", "Operating Expenses"}, "Net Operating Income", "Others"), IF(Merged_GlMap[G1] IN {"Assets"}, "Total Assets", "Total Equities an Liabilities"))
+		lineageTag: 83b33e39-c71f-4731-a5c7-b55f5b7d62c0
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category = IF(Merged_GlMap[G1] = "Operating Expenses",IF(Merged_GlMap[G2] IN {"Administrative Expenses", "Repair & Maint Supplies", "Contract Services"}, "Controllable Operating Expenses","Non Controllable Expenses"), "")
+		lineageTag: 8f0b1fda-b679-4d8d-abc1-5c5432ce15b9
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Merged_GlMap = m
+		mode: import
+		queryGroup: 'Financial Statements'
+		source = ```
+				let
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    #"Filtered Rows" = Table.TransformColumns(
+				 Table.SelectRows(Source, each Text.Contains([Name], "Gl Mapping.xlsx") or Text.Contains([Name], "Yardi Gl Mapping")),
+				    {"Content", each Excel.Workbook(_)}
+				    ),
+				    #"Expanded Content" = Table.ExpandTableColumn(#"Filtered Rows", "Content", {"Name", "Data", "Item", "Kind", "Hidden"}, {"Name.1", "Data", "Item", "Kind", "Hidden"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded Content", each ([Kind] = "Sheet")),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Filtered Rows1",{"Data", "Name"}),
+				    PromoteHeader= Table.TransformColumns(#"Removed Other Columns", {"Data", each Table.PromoteHeaders(_, [PromoteAllScalars=true])}),
+				    #"Expanded Data" = Table.ExpandTableColumn(PromoteHeader, "Data", {"Name", "Column2", "Primary Key", "G1", "G2", "G3", "G4", "G5"}, {"Name.1", "Column2", "Primary Key", "G1", "G2", "G3", "G4", "G5"}),    
+				    #"Replaced Value" = Table.ReplaceValue(
+				    Table.ReplaceValue(#"Expanded Data", "Gl Mapping.xlsx", "Sage", Replacer.ReplaceText, {"Name"}), 
+				    "Yardi Gl Mapping - Income Statement.xlsx", "Yardi", Replacer.ReplaceText, {"Name"}
+				),
+				    #"Filtered Rows2" = Table.SelectRows(#"Replaced Value", each ([Primary Key] <> null and [Primary Key] <> ""))
+				
+				in
+				    #"Filtered Rows2"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

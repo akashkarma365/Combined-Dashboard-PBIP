@@ -1,0 +1,12 @@
+# Track all PBIP project components
+!*.pbip
+!*.pbir
+!*.json
+!*.gitignore
+!/ResOne KPI - Combined Report/
+!/ResOne KPI - Combined Semantic Model/
+
+# Optional: ignore temp/unused stuff
+*.pbix
+*.tmp
+~$*

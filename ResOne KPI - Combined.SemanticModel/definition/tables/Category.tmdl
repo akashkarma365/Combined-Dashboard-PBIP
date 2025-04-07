@@ -1,0 +1,50 @@
+table Category
+	lineageTag: 3aa7f629-864f-40b2-846b-1c0d8e482405
+
+	column Category
+		lineageTag: 7347d1c7-c953-4a35-83c8-0715f75e06db
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Category Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Category Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Category Fields'
+		isHidden
+		lineageTag: 53c13022-48f6-4a8a-ad73-52718b8f7bed
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Category Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Category Order'
+		isHidden
+		formatString: 0
+		lineageTag: 960f7289-232a-4e2a-9b49-646b7a128575
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Category = calculated
+		mode: import
+		source =
+				{
+				    ("Property", NAMEOF('Dim_Regionals'[Final Name]), 0),
+				    ("Manager", NAMEOF('Dim_Regionals'[Manager]), 1),
+				    ("Regional", NAMEOF('Dim_Regionals'[Regional]), 2),
+				    ("Owner", NAMEOF('Dim_Regionals'[Owner]), 3)
+				}
+
+	annotation PBI_Id = ef854c55b5c347888f8ef34a0ab587fc
+

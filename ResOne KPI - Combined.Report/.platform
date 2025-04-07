@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "ResOne KPI - Combined"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "f4c7add8-7faf-4fc0-8c4a-58f1d96646c2"
+  }
+}

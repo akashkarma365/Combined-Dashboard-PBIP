@@ -1,0 +1,32 @@
+table ColumnRenames
+	isHidden
+	lineageTag: c88adda2-20d1-4267-8842-28430a81eebc
+
+	column ColumnRenames
+		dataType: string
+		isHidden
+		lineageTag: bc04b554-c0ac-4aff-a8c1-731f23fb45ca
+		summarizeBy: none
+		sourceColumn: ColumnRenames
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ColumnRenames = m
+		mode: import
+		queryGroup: 'Cash Receipt Journal'
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("bZKxTgMxEER/xTraFGz2IFCGOwqKRCnoohQmWXEnsH0ye0j5e1gQkj2hnB3LfuPZ/b7p0vscIjWLpjks/uSyllzLtpY3tbyt5aqWd7W8ryVdgwYuAjACMgI0AjYCODK6XU6TZD27Xj6OeZx0TLE8A8hkzOtJr8r/Mu5niT6q2/ogpWURHj/l2+m9Vo6F2flzMG8jOqRT6Vq0bnhz2zm8SC4dC/ng9Ti4p76cW9h1SHPUcmqRNxJSOVv93O3zq1xAWdr/P2Jpwbssp1HdxTMMzTE0x7hS0BxDcwzNMTTHsFcMLTFsVgt8LfC1v3yHLw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Old Names" = _t, #"New Names" = _t]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each [New Names] <> null and [New Names] <> ""),
+				    RenameList = List.Zip(Table.ToColumns(#"Filtered Rows"))
+				in
+				    RenameList
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = List
+

@@ -1,0 +1,590 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 143.73029245625284,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 874.74999568005785,
+            "y": 14.891956096766886
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 15
+        },
+        {
+          "location": {
+            "x": 505.24082794397259,
+            "y": 1.8456862754891752
+          },
+          "nodeIndex": "Dim_Unapplied",
+          "nodeLineageTag": "b3b8bf13-a7b8-4b5d-ad47-b898c6483862",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 14
+        },
+        {
+          "location": {
+            "x": 107.25258301995837,
+            "y": 1617.1585641414722
+          },
+          "nodeIndex": "ColumnRenames",
+          "nodeLineageTag": "c88adda2-20d1-4267-8842-28430a81eebc",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 12
+        },
+        {
+          "location": {
+            "x": 1458.6370670315196,
+            "y": 92.917616747147179
+          },
+          "nodeIndex": "Dim_Regionals",
+          "nodeLineageTag": "bac4fb26-7c75-469d-b198-098ef5ac172b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 13
+        },
+        {
+          "location": {
+            "x": 541.9322472414492,
+            "y": 1549.5407666036722
+          },
+          "nodeIndex": "Category",
+          "nodeLineageTag": "3aa7f629-864f-40b2-846b-1c0d8e482405",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 1088.5763313298451,
+            "y": 1525.8918770314781
+          },
+          "nodeIndex": "Measure",
+          "nodeLineageTag": "e183416b-1e6a-48fc-98ed-f5f275175ce1",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 487.38731874739642,
+            "y": 1216.1466924823094
+          },
+          "nodeIndex": "TopN",
+          "nodeLineageTag": "8f91f9e3-c473-4897-aa23-4683149c0f25",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 1187.7390225173042,
+            "y": 1240.250929517455
+          },
+          "nodeIndex": "Parameter",
+          "nodeLineageTag": "7ef9a465-ea9c-4311-bce0-287898eb7e41",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 811.30081275658006,
+            "y": 1409.0967608956851
+          },
+          "nodeIndex": "Actuals Vs Budget",
+          "nodeLineageTag": "9e928725-5912-43dc-89dd-0e36003011e0",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1381.547536391372,
+            "y": 926.5895034552899
+          },
+          "nodeIndex": "Aging_Receiveable",
+          "nodeLineageTag": "ea1267cc-7de5-4170-90f5-78d22249071c",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 16
+        },
+        {
+          "location": {
+            "x": 1111.8793600541944,
+            "y": 412.11009808312696
+          },
+          "nodeIndex": "Fact_RentRoll",
+          "nodeLineageTag": "22c17d4e-ea75-407f-8f3c-18e6ba178db8",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 817.84322311803385,
+            "y": 973.9679329009133
+          },
+          "nodeIndex": "Fact_VacancyDetails",
+          "nodeLineageTag": "d4d6f0e8-3ca6-4ab9-b2b8-af75c99b603c",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 565.00041332054263,
+            "y": 400.73716804977573
+          },
+          "nodeIndex": "Cash_Receipt_Journal",
+          "nodeLineageTag": "2dd52f47-adc4-4691-84b7-1d18c408a724",
+          "size": {
+            "height": 300,
+            "width": 221.05076780885452
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 103.55003217262241,
+            "y": 7.8027987130192
+          },
+          "nodeIndex": "Merged_GlMap",
+          "nodeLineageTag": "ffcdf4cc-0656-4e4c-b039-cd9e296d9e27",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 106.33956928469996,
+            "y": 471.29343063668773
+          },
+          "nodeIndex": "Fact_TB",
+          "nodeLineageTag": "afd905af-bfec-4b90-982d-b8e79cba9867",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 10
+        },
+        {
+          "location": {
+            "x": 338.998693798634,
+            "y": 883.79467993838387
+          },
+          "nodeIndex": "Fact_Budget",
+          "nodeLineageTag": "a2d140f5-cb22-49ba-bfd0-7b6c88490970",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 11
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 22.145539728248302,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 1,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 631,
+            "y": 0
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 53,
+            "y": 0
+          },
+          "nodeIndex": "Dim_Regionals",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 339.20000076293945,
+            "y": 52
+          },
+          "nodeIndex": "Aging_Receiveable",
+          "nodeLineageTag": "ea1267cc-7de5-4170-90f5-78d22249071c",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Delinquency",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 2,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 694,
+            "y": -13
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 397,
+            "y": 0
+          },
+          "nodeIndex": "Dim_Regionals",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": -35.748318448406337,
+            "y": 578.19317999999942
+          },
+          "nodeIndex": "Fact_TB",
+          "nodeLineageTag": "afd905af-bfec-4b90-982d-b8e79cba9867",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1145.8828685515928,
+            "y": 556.93444799999952
+          },
+          "nodeIndex": "Fact_Budget",
+          "nodeLineageTag": "a2d140f5-cb22-49ba-bfd0-7b6c88490970",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1135.2535025515926,
+            "y": 135.3029299999998
+          },
+          "nodeIndex": "Merged_GlMap",
+          "nodeLineageTag": "ffcdf4cc-0656-4e4c-b039-cd9e296d9e27",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Financials",
+      "zoomValue": 56.447393005377791,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 3,
+      "scrollPosition": {
+        "x": 165.60000610351563,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 855,
+            "y": 112
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 149,
+            "y": 114
+          },
+          "nodeIndex": "Dim_Regionals",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 497.59999465942383,
+            "y": 0
+          },
+          "nodeIndex": "Fact_RentRoll",
+          "nodeLineageTag": "22c17d4e-ea75-407f-8f3c-18e6ba178db8",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Rent Roll",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 4,
+      "scrollPosition": {
+        "x": 41.599998474121094,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 666.20000076293945,
+            "y": -10
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 47.200000762939453,
+            "y": 0
+          },
+          "nodeIndex": "Dim_Regionals",
+          "nodeLineageTag": "bac4fb26-7c75-469d-b198-098ef5ac172b",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 357.79999923706055,
+            "y": 0
+          },
+          "nodeIndex": "Cash_Receipt_Journal",
+          "nodeLineageTag": "2dd52f47-adc4-4691-84b7-1d18c408a724",
+          "size": {
+            "height": 300,
+            "width": 253
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Collection Efficiency",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 5,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 525.79999923706055,
+            "y": 149
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 26,
+            "y": 146
+          },
+          "nodeIndex": "Dim_Regionals",
+          "nodeLineageTag": "bac4fb26-7c75-469d-b198-098ef5ac172b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 274.60000038146973,
+            "y": -5
+          },
+          "nodeIndex": "Fact_VacancyDetails",
+          "nodeLineageTag": "d4d6f0e8-3ca6-4ab9-b2b8-af75c99b603c",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Layout 1",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 6,
+      "scrollPosition": {
+        "x": 0,
+        "y": 97.5999984741211
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 494.20000076293945,
+            "y": 52
+          },
+          "nodeIndex": "Merged_GlMap",
+          "nodeLineageTag": "ffcdf4cc-0656-4e4c-b039-cd9e296d9e27",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 66
+          },
+          "nodeIndex": "DimDate",
+          "nodeLineageTag": "e0aaa14f-f9f7-439a-a200-8ffa142efc1a",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 192.20000076293945,
+            "y": 385
+          },
+          "nodeIndex": "Fact_TB",
+          "nodeLineageTag": "afd905af-bfec-4b90-982d-b8e79cba9867",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 237.20000076293945,
+            "y": 53.599998474121094
+          },
+          "nodeIndex": "Dim_Regionals",
+          "nodeLineageTag": "bac4fb26-7c75-469d-b198-098ef5ac172b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Layout 2",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Rent Roll",
+  "defaultDiagram": "All tables"
+}

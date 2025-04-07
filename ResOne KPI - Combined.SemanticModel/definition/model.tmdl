@@ -1,0 +1,70 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup 'AR Aging'
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup 'Rent Roll'
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup 'Financial Statements'
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup 'Cash Receipt Journal'
+
+	annotation PBI_QueryGroupOrder = 3
+
+/// Errors in queries that were loaded on 03/27/2025 20:15:44.
+queryGroup 'Query Errors - 03/27/2025 20:15:44'
+
+	annotation PBI_QueryGroupOrder = 4
+
+annotation PBI_QueryOrder = ["Delinquency_Yardi","Delinquency_Sage","Aging_Receiveable","Dim_Regionals","Dim_Unapplied","Sage_TB","Rent_Yardi","Rent_Sage","Fact_RentRoll","Vacancy_Yardi","Vacancy_Sage","ColumnRenames","Fact_VacancyDetails","DepositSummary_yardi","Cash_Receipt_Journal_Sage","Cash_Receipt_Journal","Merged_GlMap","Yardi_TB","Fact_TB","Fact_Budget","Errors in Aging_Receiveable"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBIDesktopVersion = 2.141.1253.0 (25.03)+74f9999a1e95f78c739f3ea2b96ba340e9ba8729
+
+annotation PBI_ProTooling = ["CalcGroup","DevMode"]
+
+ref table Dim_Regionals
+ref table DateTableTemplate_9ed28fd1-ab04-4f3e-98ff-d60f6d34c39f
+ref table DimDate
+ref table Dim_Unapplied
+ref table LocalDateTable_9d9260b8-e4da-4f1e-8270-fd236603d81f
+ref table ColumnRenames
+ref table Category
+ref table Measure
+ref table TopN
+ref table Parameter
+ref table 'Actuals Vs Budget'
+ref table Aging_Receiveable
+ref table Fact_RentRoll
+ref table Fact_VacancyDetails
+ref table LocalDateTable_8071758b-4a0b-4846-bae0-ba4277a802c4
+ref table LocalDateTable_bc0541b1-0752-42f0-8891-e0b2ca75ede6
+ref table LocalDateTable_3740658f-3c7b-4233-b2e0-6a500ad078eb
+ref table LocalDateTable_cbf4b87f-c154-4b77-804a-377b4a16c67d
+ref table LocalDateTable_55a175ed-9754-4a31-a67c-14dd48e4696a
+ref table Cash_Receipt_Journal
+ref table LocalDateTable_7955377b-031b-4b70-bff5-81edcfabbc73
+ref table Merged_GlMap
+ref table Fact_TB
+ref table Fact_Budget
+ref table LocalDateTable_ff920742-b35b-424c-b9a7-035e228d00ed
+
+ref role 'Neveen Kamal'
+ref role 'Sescel Harris'
+ref role 'Vickei Janes'
+
+ref cultureInfo en-US
+

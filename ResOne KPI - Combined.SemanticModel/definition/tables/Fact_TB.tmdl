@@ -1,0 +1,761 @@
+table Fact_TB
+	lineageTag: afd905af-bfec-4b90-982d-b8e79cba9867
+
+	measure Billed = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    - CALCULATE(
+			        SUMX(Fact_TB, Fact_TB[Amount]), 
+			        Merged_GlMap[G3] IN {
+			            "Gross Rent Potential", 
+			            "Vacancy Loss", 
+			            "Loss to Lease", 
+			            "Management Used", 
+			            "Market Concessions"
+			        }
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi =
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G3] IN {
+			            "Rent: Current Residents",
+			            "Rent: Subsidies",
+			            "Concessions",
+			            "Vacancy Loss"
+			        }
+			    ) 
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no system is selected, return the combined total
+			    Sage + Yardi, 
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        Sage+Yardi  -- Default case if neither Sage nor Yardi is selected
+			    )
+			)
+			
+			```
+		lineageTag: 02c5ae43-33b2-4e25-b959-e616bdb785b3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Net_Collected = [Billed] - [Current_Owed]
+		lineageTag: e4bb29b1-29cb-4061-90d6-2f0c4fa8aacd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total_Billed = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Dim_Regionals[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[G3] IN {
+			            "Gross Rent Potential", "Vacancy Loss", "Loss to Lease", 
+			            "Management Used", "Market Concessions", "Damages", 
+			            "Late/Legal Fees", "Month to Month", "NSF Fees"
+			        }
+			    ) * -1  -- Keeping the negative sign only if intended
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[Column2] IN {
+			    "07031-000", "07031-001", "07031-002", "07031-003", "07031-004",
+			    "07031-005", "07031-006", "07031-007", "07031-008", "07031-009",
+			    "07031-010", "07031-011", "07031-012", "07031-013", "07031-014",
+			    "07032-000", "07032-001", "07032-002", "07032-003", "07032-004",
+			    "07032-005", "07032-006", "07032-007", "07032-008", "07032-009",
+			    "07033-000", "07033-001", "07041-001", "07041-002", "07041-003",
+			    "07041-004", "07042-001", "07042-002", "07042-003", "07042-004",
+			    "07042-005", "07042-006", "07042-007", "07042-008", "07042-011"
+			}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the combined total
+			    Sage + Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 68c1e47f-653e-4a40-ac50-945b303176bc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total_Operating_Exp = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[G1] = "Operating Expenses"
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Fact_TB[Account title] IN {"TOTAL OPERATING EXPENSES"}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    Sage + Yardi,
+			    -- Otherwise, return based on selection
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 0f560f05-2ebf-4af2-9646-bff9603e2908
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Repairs_&_Maintenance = CALCULATE(SUM('Fact_TB'[Amount]), Merged_GlMap[G2] = "Repair & Maint Supplies")
+		lineageTag: ae779862-830b-4e98-9c2b-285a421ab83b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure R&M_to_Operating_Exp = DIVIDE([Repairs_&_Maintenance], [Operating_Expense])
+		lineageTag: 6cab2fad-6e99-4dea-ac5f-614a1353e067
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Operating_Expense = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G1] = "Operating Expenses"
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Fact_TB[Account title] IN {"TOTAL OPERATING EXPENSES"}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    Sage + Yardi,  -- Combined total if no system is selected
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 9972a0d4-1646-422a-ba01-b5cb1ff0c69f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Controllable_Op_Exp = CALCULATE(SUM('Fact_TB'[Amount]), Merged_GlMap[Category] = "Controllable Operating Expenses")
+		lineageTag: 3b55948f-c637-4102-9d41-eaa63f6b2de2
+
+	measure 'Controllable_Op_Exp %' = DIVIDE([Controllable_Op_Exp], [Total_Operating_Exp])
+		lineageTag: c82b34b3-5dab-4b9e-9305-51937e460432
+
+	measure Actual_Rent = ```
+			
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    - CALCULATE(
+			        SUMX(Fact_TB, Fact_TB[Amount]), 
+			        Merged_GlMap[G3] IN {
+			            "Gross Rent Potential", 
+			            "Vacancy Loss", 
+			            "Loss to Lease", 
+			            "Management Used", 
+			            "Market Concessions"
+			        }
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G3] IN {
+			            "Rent: Current Residents",
+			            "Rent: Subsidies",
+			            "Concessions",
+			            "Vacancy Loss"
+			        }
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    Sage + Yardi,
+			    -- Otherwise, return based on selection
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: e369f16d-257b-444e-ba20-114157b698b6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Debt_Service = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    - CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[Column2] IN {"466710", "266710"}, 
+			        Merged_GlMap[Name.1] = "Income Statement"
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Fact_TB[Account title] IN {"TOTAL DEBT SERVICE"}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    Sage + Yardi,
+			    -- Otherwise, return based on selection
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: ab018dfa-80e9-4346-8065-e77836f3474c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DSCR =
+			
+			DIVIDE([NOI], [Debt_Service])
+		lineageTag: e9725f68-8226-4b87-a1c0-bb7fe0afcbff
+
+	measure Economic_Occupancy% = DIVIDE([Net_Collected], [Gross_Potential_Rent])
+		lineageTag: ff546c61-dbac-47d1-a61c-60342f31adfd
+
+	measure Filter = ```
+			DATATABLE(
+			    "Filter Order",
+			    STRING,
+			    {
+			        {"Top 10"},
+			        {"Bottom 10"},
+			        {"Overall"}
+			    }
+			)
+			
+			```
+		lineageTag: c7f7a811-db8e-48ac-8192-cff6acb3ebcc
+
+	measure Formatted_Amt = SUMX('Fact_TB', 'Fact_TB'[Amount] * -1)
+		lineageTag: 9faa2535-16ba-4008-aea3-129853e32253
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Gross_Potential_Rent = ```
+			
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    - CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[G3] = "Gross Rent Potential"
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    SUM(Fact_RentRoll[Market Rent])
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    Sage + Yardi,
+			    -- Otherwise, return based on selection
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 7ed356c0-d461-4a30-811b-e72cdf82d390
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Net_Rental_Income = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    - CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G2] IN {
+			            "Rental Income", 
+			            "(Incr)Decr Delinquents", 
+			            "Incr(Decr) Prepaids"
+			        }
+			    )
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G3] IN {
+			            "Rent: Current Residents",
+			            "Rent: Subsidies",
+			            "Concessions",
+			            "Vacancy Loss",
+			            "Other Rent Fees"
+			        }
+			    )
+			
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem),
+			    -- If no system is selected, return the combined total
+			    Sage + Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 94fab653-33fa-49c2-b6fd-1978c1216ed1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Net_Rental_Income_Monthly_Trend = ```
+			VAR NRIPrevMonth = CALCULATE([Net_Rental_Income], DATEADD(DimDate[Date], -1, MONTH))
+			RETURN
+			IF(ISBLANK([Net_Rental_Income]), BLANK(), DIVIDE([Net_Rental_Income] - NRIPrevMonth, NRIPrevMonth))
+			
+			```
+		lineageTag: a92c04e9-ecb3-4739-8e2d-500b7e8e682a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure NOI = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage_OperatingExp = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[G1] = "Operating Expenses"
+			    )
+			
+			VAR Sage_OperatingIncome = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[G1] = "Operating Income"
+			    )
+			
+			VAR Sage = -(Sage_OperatingExp + Sage_OperatingIncome)  -- Applying negative sign if intended
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Fact_TB[Account title] = "NET OPERATING INCOME"
+			    )
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the combined total
+			    Sage + Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: d240f577-c2bf-42ed-837b-5b7155e7bfd7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure NOI_PY = CALCULATE([NOI], SAMEPERIODLASTYEAR(DimDate[Date]))
+		lineageTag: e7247c66-799d-4097-9ff6-19b7b5ed5251
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure NOI_YOY =
+			
+			Var NOIPY = CALCULATE([NOI], SAMEPERIODLASTYEAR(DimDate[Date]))
+			Return
+			IF(ISBLANK([NOI]),BLANK(),DIVIDE([NOI] - NOIPY, NOIPY))
+		lineageTag: 244d26f1-e61e-4c8f-8ecd-2961ed82c5f2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Non_Controllable_Exp %' = DIVIDE([Non_Controllable_Op_Exp], [Total_Operating_Exp])
+		lineageTag: 9b5278e0-df17-44d1-833b-ee17ba1a6d08
+
+	measure Non_Controllable_Op_Exp = CALCULATE(SUM('Fact_TB'[Amount]), Merged_GlMap[Category] = "Non Controllable Expenses")
+		lineageTag: 808af27d-799b-4658-9ce3-b4357b544501
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Operating_Income = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			VAR Sage =
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G1] = "Operating Income"
+			    )
+			
+			VAR Yardi =
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Merged_GlMap[G1] = "Operating Income"
+			    )
+			
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem),
+			    Sage + Yardi,
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", Sage,      // or, if needed, -Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 4123f334-8dcc-4db4-a7da-e4b1a59611ee
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Other_Income = ```
+			
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_TB[Software])
+			
+			-- Sage Calculation
+			VAR Sage = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]), 
+			        Merged_GlMap[G2] = "Other Income"
+			    ) * -1  -- Keeping the negative sign only if intended
+			
+			-- Yardi Calculation
+			VAR Yardi = 
+			    CALCULATE(
+			        SUM(Fact_TB[Amount]),
+			        Fact_TB[Account title] IN {
+			            "TOTAL INVESTMENT INC. - RESTRICTED",
+			            "TOTAL OTHER REVENUE",
+			            "TOTAL TENANT INCOME"
+			        }
+			    ) - [Net_Rental_Income]
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the combined total
+			    Sage + Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Sage,
+			        "Yardi", Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: a560174b-d45f-4a2b-be6b-bc92a1ecab47
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Porfolio_Economic_Occupancy% = DIVIDE(CALCULATE([Net_Collected], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Gross_Potential_Rent], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+		lineageTag: 4d30c66f-4400-48a2-ad51-177409f597e1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Portfolio_Controllable_Exp %' = CALCULATE([Controllable_Op_Exp %], ALL(Dim_Regionals[Final Name], Dim_Regionals[Regional], Dim_Regionals[Manager], Dim_Regionals[Owner]))
+		lineageTag: 08a6bae7-acf6-441b-8cde-a4a2d5aa0c33
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Portfolio_DSCR = CALCULATE([DSCR], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional]))
+		lineageTag: 765f7348-cc02-43af-ae72-dd7dc5b176b3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Portfolio_NOI% =
+			
+			DIVIDE(CALCULATE([NOI], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Operating_Income], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+		lineageTag: 4e7c1b74-a698-4d5e-af4b-5efd389443b3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Portfolio_Non_Controllable_Exp = CALCULATE([Non_Controllable_Exp %], ALL(Dim_Regionals[Final Name], Dim_Regionals[Owner], Dim_Regionals[Regional], Dim_Regionals[Manager]))
+		lineageTag: ec15c679-32e5-4031-b6f5-d475b53eeeb4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Properties_Count = DISTINCTCOUNT('Fact_TB'[Location title])
+		formatString: 0
+		lineageTag: 4cb977f7-addb-41b1-8f58-4460c010efc8
+
+	measure 'Property_Rank (Avg Rent)' = ```
+			
+			RANKX(ALL(Dim_Regionals[Final Name]),
+			    [Average_Rent], 
+			    , 
+			    DESC, 
+			    DENSE
+			)
+			```
+		formatString: 0
+		lineageTag: d4ae72cb-c029-4d8f-822a-d61e2ddfe70b
+
+	measure %NOI =
+			
+			DIVIDE([NOI], [Operating_Income])
+		lineageTag: 5f7935d5-27fd-4aa1-a3a1-2554baf0f535
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_GPR = [Gross_Potential_Rent]/[Total_Units]
+		lineageTag: 998c3ab1-ab22-4325-85f6-b06cb6f1e627
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Net Collected' = [Billed] - [Current_Owe]
+		lineageTag: fd00ae67-20e0-49a6-b2c6-5190d0cf7c17
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Overall = SUMX('Fact_TB', 'Fact_TB'[Amount] * -1)
+		lineageTag: 0f5e24cb-2e8f-420a-adcb-c237140f27e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Per Unit' = DIVIDE([Overall], [Total_Units])
+		lineageTag: c1ce36f2-eeda-40ad-90a4-5e4475799614
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Column1
+		dataType: string
+		lineageTag: c93c2e07-7550-4c01-b063-fb98943be374
+		summarizeBy: none
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Account no.'
+		dataType: string
+		lineageTag: 3932bf8e-1801-4028-83c8-4af1b41af864
+		summarizeBy: none
+		sourceColumn: Account no.
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Account title'
+		dataType: string
+		lineageTag: 2dd046bd-f37a-42eb-9f14-7901881b0d67
+		summarizeBy: none
+		sourceColumn: Account title
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Debit amount'
+		dataType: int64
+		formatString: 0
+		lineageTag: a757ee25-a2c3-4c8e-8a2d-dcdfa8d9d2d8
+		summarizeBy: sum
+		sourceColumn: Debit amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Credit amount'
+		dataType: string
+		lineageTag: 0f7a964e-e939-4105-83d1-0f1684cd75e7
+		summarizeBy: none
+		sourceColumn: Credit amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Amount
+		dataType: double
+		lineageTag: ee5b8d64-c105-4819-8a64-85deff2de9d4
+		summarizeBy: sum
+		sourceColumn: Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Primary Key'
+		dataType: string
+		lineageTag: 41661357-1f42-462b-b5cc-51c85a0c2f37
+		summarizeBy: none
+		sourceColumn: Primary Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Software
+		dataType: string
+		lineageTag: e83f518a-288d-4f0b-9d65-76026cf08d55
+		summarizeBy: none
+		sourceColumn: Software
+
+		annotation SummarizationSetBy = Automatic
+
+	column Calendar
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: d1754a92-7ea2-47bd-8c3e-7500a0f392fa
+		summarizeBy: none
+		sourceColumn: Calendar
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c3c14824-b6b4-4081-965c-a5408a0373d5
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: ad41f94f-688c-48ec-9aed-ef7804610d97
+			defaultHierarchy: LocalDateTable_ff920742-b35b-424c-b9a7-035e228d00ed.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Location title'
+		dataType: string
+		lineageTag: 09285b50-d385-49d4-8c06-6dd794b7b463
+		summarizeBy: none
+		sourceColumn: Location title
+
+		annotation SummarizationSetBy = Automatic
+
+	column Location
+		dataType: string
+		lineageTag: 3c00b476-f53a-429f-b04d-4ac03c860ea8
+		summarizeBy: none
+		sourceColumn: Location
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_TB = m
+		mode: import
+		queryGroup: 'Financial Statements'
+		source =
+				let
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    Navigation = Table.SelectRows(Source, each Text.Contains([Folder Path], "Trial Balance", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files") or Text.Contains([Folder Path], "Statement", Comparer.OrdinalIgnoreCase) and not Text.Contains([Name],"Budget")),
+				    #"Added Custom" = Table.AddColumn(Navigation, "Software", each if Text.Contains([Folder Path], "Yardi", Comparer.OrdinalIgnoreCase) then "Yardi" else "Sage"),
+				    TableTransform = Table.AddColumn(#"Added Custom", "Data", each if [Software] = "Yardi" then Yardi_TB([Content]) else Sage_TB([Content])),
+				    DateCol = Table.AddColumn(TableTransform, "Date", each try
+				    let
+				        Period = Text.Middle([Name],Text.Length([Name]) - 8,4),
+				        Month = Number.From(Text.Start(Period,2)),
+				        Year = 2000 + Number.From(Text.End(Period,2)),
+				        Date = Date.EndOfMonth(#date(Year,Month,1))
+				    in
+				        Date otherwise null),
+				    RemovedCols = Table.SelectColumns(DateCol,{"Data", "Date", "Software"}),
+				    ColNames = List.Distinct(List.Combine(Table.AddColumn(RemovedCols, "Column Names", each Table.ColumnNames([Data]))[Column Names])),
+				    ExpandedTable = Table.ExpandTableColumn(RemovedCols, "Data", ColNames),
+				    #"Added Conditional Column" = Table.AddColumn(ExpandedTable, "Calendar", each if [Period] = null then [Date] else Date.From([Period])),
+				    #"Filtered Rows" = Table.SelectRows(#"Added Conditional Column", each ([Period] <> "Total")),
+				    #"Removed Columns" = Table.RemoveColumns(#"Filtered Rows",{"Period"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"", type text}, {"Location", type any}, {"Location title", type text}, {"Account no.", type any}, {"Account title", type text}, {"Debit amount", Int64.Type}, {"Credit amount", type any}, {"Amount", type number}, {"Primary Key", type text}, {"Date", type date}, {"Software", type text}, {"Calendar", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,402 @@
+table Fact_RentRoll
+	lineageTag: 22c17d4e-ea75-407f-8f3c-18e6ba178db8
+
+	measure Occupied_Units = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_RentRoll[Accounting Software])
+			
+			-- Sage Calculation: Count units where Vacancy Indicator is 0
+			VAR OccupiedUnits_Sage = 
+			    CALCULATE(
+			        COUNT(Fact_RentRoll[Unit Id]), 
+			        Fact_RentRoll[Vacancy Indicator] = 0
+			    )
+			
+			-- Yardi Calculation: Count units where Name is NOT "VACANT"
+			VAR OccupiedUnits_Yardi =
+			    CALCULATE(
+			        COUNT(Fact_RentRoll[Name]), 
+			        Fact_RentRoll[Name] <> "VACANT",
+			        Fact_RentRoll[Unit Description] <> "Future Residents/Applicants"
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return total occupied units across both systems
+			    OccupiedUnits_Sage + OccupiedUnits_Yardi,
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", OccupiedUnits_Sage,
+			        "Yardi", OccupiedUnits_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: f5f5ba4a-5049-4857-8432-54de81f953ad
+
+	measure Total_Units = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_RentRoll[Accounting Software])
+			
+			-- Sage Calculation
+			VAR TotalUnits_Sage = COUNT(Fact_RentRoll[Unit Id])
+			
+			-- Yardi Calculation
+			VAR TotalUnits_Yardi = COUNT(Fact_RentRoll[Unit] )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the combined total
+			    TotalUnits_Sage + TotalUnits_Yardi,
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", TotalUnits_Sage,
+			        "Yardi", TotalUnits_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 54f0e238-fc7f-4e92-9fdd-8a10d986aba8
+
+	measure 'Occupancy %' = DIVIDE([Occupied_Units], [Total_Units])
+		lineageTag: 7872f079-9825-4c12-a1cf-160246bb9381
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Rent_ = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Fact_RentRoll[Accounting Software])
+			
+			-- Sage Calculation
+			VAR Rent_Sage = 
+			    - CALCULATE(
+			        SUM('Fact_TB'[Amount]), 
+			        Merged_GlMap[G3] IN {
+			            "Gross Rent Potential", 
+			            "Vacancy Loss", 
+			            "Loss to Lease", 
+			            "Management Used", 
+			            "Market Concessions"
+			        }
+			    )
+			
+			-- Yardi Calculation
+			VAR Rent_Yardi = 
+			    CALCULATE(
+			        SUM('Fact_TB'[Amount]), 
+			        Merged_GlMap[G3] IN {
+			            "Rent: Current Residents",
+			            "Rent: Subsidies",
+			            "Concessions",
+			            "Vacancy Loss",
+			            "Other Rent Fees"
+			        }
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the combined total
+			    Rent_Sage + Rent_Yardi,
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", Rent_Sage,
+			        "Yardi", Rent_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 429e70db-9d51-4855-8d91-730528d8aa1d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_Rent = DIVIDE([Rent_], [Occupied_Units])
+		lineageTag: c2139151-5e41-43ce-a9c4-281722b6765d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_Units = DIVIDE([Total_Units], DISTINCTCOUNT('Fact_RentRoll'[Date]))
+		lineageTag: 5c0d5cb4-c1bf-4df3-bd9b-108ba61f5595
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Avg_Occupied_Units = DIVIDE([Occupied_Units], DISTINCTCOUNT('Fact_RentRoll'[Date]))
+		lineageTag: f6b8d88b-b778-49a7-ba48-384819898b62
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Portfolio_Occupancy = CALCULATE([Occupancy %], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional]))
+		lineageTag: c6d93fd5-774e-4e6b-83ad-dcc977b02b92
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Community Id'
+		dataType: string
+		lineageTag: 102fa383-0cb1-40e8-93ab-ecd128774704
+		summarizeBy: none
+		sourceColumn: Community Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Id'
+		dataType: int64
+		formatString: 0
+		lineageTag: 302a01ff-5958-4f7e-b0f9-5ccefdbef7e6
+		summarizeBy: count
+		sourceColumn: Unit Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Vacancy Indicator'
+		dataType: int64
+		formatString: 0
+		lineageTag: 9ac4c87e-7c31-4607-9ea2-2116f64f2ae7
+		summarizeBy: sum
+		sourceColumn: Vacancy Indicator
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Community Description'
+		dataType: string
+		lineageTag: 58712a80-370c-4ef6-a875-5674cf8808a1
+		summarizeBy: none
+		sourceColumn: Community Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Type'
+		dataType: string
+		lineageTag: 1eff1e24-9cf4-4e85-83a1-1c786d35e936
+		summarizeBy: none
+		sourceColumn: Unit Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Sq Ft'
+		dataType: string
+		lineageTag: 1767f13b-2bfe-4c53-8e82-08943d42b9b1
+		summarizeBy: none
+		sourceColumn: Unit Sq Ft
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resident
+		dataType: string
+		lineageTag: b99624e7-0884-4a9e-9e14-5f0dad9b1b4c
+		summarizeBy: none
+		sourceColumn: Resident
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		lineageTag: 719d34de-f8c7-4232-b3da-abd447633178
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Market Rent'
+		dataType: double
+		lineageTag: c3945b9d-e3bf-4123-8e79-18bb451babaa
+		summarizeBy: sum
+		sourceColumn: Market Rent
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Actual Rent'
+		dataType: string
+		lineageTag: 38392c04-de3c-4fbd-9cd7-3a3601e424f4
+		summarizeBy: none
+		sourceColumn: Actual Rent
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Resident Deposit'
+		dataType: string
+		lineageTag: a131455a-eeca-4dab-b822-834cddb48cab
+		summarizeBy: none
+		sourceColumn: Resident Deposit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Other Deposit'
+		dataType: string
+		lineageTag: de869438-294a-4db7-b8a7-76adcb505bcb
+		summarizeBy: none
+		sourceColumn: Other Deposit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Move In'
+		dataType: string
+		lineageTag: 8160f427-693e-4675-98bd-bfec5ea233a4
+		summarizeBy: none
+		sourceColumn: Move In
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lease Expiration'
+		dataType: string
+		lineageTag: a901459a-4226-4e9b-84a2-df39d1ab92c5
+		summarizeBy: none
+		sourceColumn: Lease Expiration
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Move Out'
+		dataType: string
+		lineageTag: cf881e6e-51b0-4db4-a26e-70230f58b360
+		summarizeBy: none
+		sourceColumn: Move Out
+
+		annotation SummarizationSetBy = Automatic
+
+	column Balance
+		dataType: string
+		lineageTag: a3a83f4e-aab5-4989-9a7d-861300c66c7e
+		summarizeBy: none
+		sourceColumn: Balance
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Community Name'
+		dataType: string
+		lineageTag: 5d55551b-01d8-4f73-bada-f9feaf27da4e
+		summarizeBy: none
+		sourceColumn: Community Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 48cb78f4-63d0-482d-a25e-fc734c70d968
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Accounting Software'
+		dataType: string
+		lineageTag: 74d8403a-a384-4ed9-ba3c-e04f4d11d865
+		summarizeBy: none
+		sourceColumn: Accounting Software
+
+		annotation SummarizationSetBy = Automatic
+
+	column Indate
+		dataType: string
+		lineageTag: b3e1cf02-933b-49b2-a3ab-cea944ca6967
+		summarizeBy: none
+		sourceColumn: Indate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Outdate
+		dataType: string
+		lineageTag: 8f9d91d5-0028-4f9c-8e92-db8721909312
+		summarizeBy: none
+		sourceColumn: Outdate
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lease Expire Date'
+		dataType: string
+		lineageTag: d17d7407-94a7-44b4-a281-816d4f89eba3
+		summarizeBy: none
+		sourceColumn: Lease Expire Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Gross Potential'
+		dataType: string
+		lineageTag: 0e2db530-993b-482e-a04d-392fa2e2cec9
+		summarizeBy: none
+		sourceColumn: Gross Potential
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Next Recert Date'
+		dataType: string
+		lineageTag: ffad2a93-b83f-4a87-9067-8af8f925e6ed
+		summarizeBy: none
+		sourceColumn: Next Recert Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: 5aac17aa-2c59-4360-a2f1-f8155150f65a
+		summarizeBy: none
+		sourceColumn: Unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Description'
+		dataType: string
+		lineageTag: 8bcf843d-089f-48ab-88b0-5f9664ec142e
+		summarizeBy: none
+		sourceColumn: Unit Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_RentRoll = m
+		mode: import
+		queryGroup: 'Rent Roll'
+		source =
+				let
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    Navigation = Table.SelectRows(Source, each Text.Contains([Folder Path], "rent", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files") or Text.Contains([Folder Path],"Yardi") and Text.Contains([Folder Path], "rent", Comparer.OrdinalIgnoreCase)),
+				    AccountingSoftwareCol = Table.AddColumn(Navigation, "Accounting Software", each if Text.Contains([Folder Path], "Yardi") then "Yardi" else "Sage"),
+				    #"Invoked Custom Function" = Table.AddColumn(AccountingSoftwareCol, "Tables", each if Text.Contains([Accounting Software], "Yardi") then Rent_Yardi([Content]) else Rent_Sage([Content])),
+				    DateCol = Table.AddColumn(#"Invoked Custom Function", "Date", each
+				if Text.Contains([Accounting Software], "Sage") then
+				    let
+				        Date = Text.BetweenDelimiters([Name],"_","."),
+				        Month = Number.From(Text.Start(Date,2)),
+				        Year = 2000 + Number.From(Text.End(Date,2)),
+				        Period = Date.EndOfMonth(#date(Year,Month,1))
+				    in
+				Period
+				else
+				    let
+				        Date = Text.BetweenDelimiters([Name],"-","."),
+				        Month = Number.From(Text.Start(Date,2)),
+				        Year = 2000 + Number.From(Text.End(Date,2)),
+				        Period = Date.EndOfMonth(#date(Year,Month,1))
+				    in
+				Period,
+				type date),
+				    RemovedCols = Table.SelectColumns(DateCol,{"Tables", "Date","Accounting Software"}),
+				    ColNames = let
+				        ColumnNames = Table.AddColumn(RemovedCols, "ColNames", each Table.ColumnNames([Tables])),
+				        ColNames = List.Distinct(List.Combine(ColumnNames[ColNames]))
+				        in
+				        ColNames,
+				    ExpandedTables = Table.ExpandTableColumn(RemovedCols, "Tables", ColNames),
+				    ChangeType = Table.TransformColumnTypes(ExpandedTables,{{"Community Id", type text}, {"Unit Id", Int64.Type}, {"Vacancy Indicator", Int64.Type}, {"Community Description", type any},{"Unit", type any }, {"Unit Type", type any}, {"Unit Sq Ft", type any}, {"Resident", type any}, {"Name", type any}, {"Market Rent", type number}, {"Actual Rent", type any}, {"Resident Deposit", type any}, {"Other Deposit", type any}, {"Move In", type any}, {"Lease Expiration", type any}, {"Move Out", type any}, {"Balance", type any}, {"Community Name", type any},{"Unit Description", type any}, {"Date", type date}})
+				in
+				    ChangeType
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,7 @@
+role 'Vickei Janes'
+	modelPermission: read
+
+	tablePermission Dim_Regionals = [Regional] == "Vickei Janes"
+
+	annotation PBI_Id = 7cc5e4dd52bf4298b115b03de1aa3daa
+

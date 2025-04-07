@@ -1,0 +1,117 @@
+relationship f0205928-bc7f-4c78-8035-59de7bbe675f
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Dim_Unapplied.Period
+	toColumn: LocalDateTable_9d9260b8-e4da-4f1e-8270-fd236603d81f.Date
+
+relationship 52e2b4dd-ad47-57cc-0835-a95fa446d0a8
+	fromColumn: Aging_Receiveable.'Community Id'
+	toColumn: Dim_Regionals.'Boston Id'
+
+relationship d4fcbf70-60c1-4a31-bb35-161d55a5dae6
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_VacancyDetails.'Actual Vacancy Start Date'
+	toColumn: LocalDateTable_8071758b-4a0b-4846-bae0-ba4277a802c4.Date
+
+relationship 807d9878-3590-47e9-b4d9-e06b403eeb5c
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_VacancyDetails.'Actual Vacancy End Date'
+	toColumn: LocalDateTable_bc0541b1-0752-42f0-8891-e0b2ca75ede6.Date
+
+relationship 291ffe88-4468-45c6-9fec-935a36df68a3
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_VacancyDetails.'Next Indate'
+	toColumn: LocalDateTable_3740658f-3c7b-4233-b2e0-6a500ad078eb.Date
+
+relationship 748f2faa-b45a-4c4a-9c27-21df5e999600
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_VacancyDetails.'Period Vacancy Start Date'
+	toColumn: LocalDateTable_cbf4b87f-c154-4b77-804a-377b4a16c67d.Date
+
+relationship 73ebd49b-b023-4679-a78c-481d23836026
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_VacancyDetails.'Period Vacancy End Date'
+	toColumn: LocalDateTable_55a175ed-9754-4a31-a67c-14dd48e4696a.Date
+
+relationship 44c68f82-c35c-4bce-81dd-3280555aaa75
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Cash_Receipt_Journal.Date1
+	toColumn: LocalDateTable_7955377b-031b-4b70-bff5-81edcfabbc73.Date
+
+relationship e63f83f6-702d-5211-1865-21151a6fc28e
+	fromColumn: Fact_RentRoll.'Community Id'
+	toColumn: Dim_Regionals.'Boston Id'
+
+relationship a5b58751-b4c9-5f7a-7ed1-26df571f7e1c
+	fromColumn: Fact_VacancyDetails.'Community Id'
+	toColumn: Dim_Regionals.'Boston Id'
+
+relationship AutoDetected_c02a0372-86fb-42e3-ae7d-caf10252ba6a
+	fromColumn: Fact_TB.'Primary Key'
+	toColumn: Merged_GlMap.'Primary Key'
+
+relationship AutoDetected_377288d3-617d-430c-883b-f63fd034d036
+	fromColumn: Fact_Budget.'Primary Key'
+	toColumn: Merged_GlMap.'Primary Key'
+
+relationship 9a948ac6-95de-edae-ea82-f0af1ede1932
+	isActive: false
+	crossFilteringBehavior: bothDirections
+	toCardinality: many
+	fromColumn: Dim_Regionals.Software
+	toColumn: Aging_Receiveable.'Accounting Software'
+
+relationship cbf4de53-3c51-25f0-b7d0-8f1435224f85
+	isActive: false
+	crossFilteringBehavior: bothDirections
+	toCardinality: many
+	fromColumn: Dim_Regionals.Software
+	toColumn: Fact_VacancyDetails.'Accounting Software'
+
+relationship 688bf4b8-1397-baea-df4d-2f46b8f9b3c2
+	fromColumn: Cash_Receipt_Journal.'Property Description'
+	toColumn: Dim_Regionals.'Boston Name'
+
+relationship 7a005d1b-c3c5-9c3a-b02f-4af866a1447a
+	isActive: false
+	crossFilteringBehavior: bothDirections
+	toCardinality: many
+	fromColumn: Dim_Regionals.Software
+	toColumn: Cash_Receipt_Journal.'Accounting Software'
+
+relationship e11eb5eb-42ac-a3f7-9f80-26eee5c2b615
+	fromColumn: Aging_Receiveable.Period
+	toColumn: DimDate.Date
+
+relationship 4f9b02d6-1fbd-5947-8836-8b87c82d764a
+	fromColumn: Fact_RentRoll.Date
+	toColumn: DimDate.Date
+
+relationship 55fff0cf-c726-47cb-9d4b-48e504cd1a9e
+	fromColumn: Fact_VacancyDetails.Date
+	toColumn: DimDate.Date
+
+relationship 39d64709-5730-56f0-29c0-1cf6beed9faf
+	fromColumn: Fact_TB.Calendar
+	toColumn: DimDate.Date
+
+relationship 003d45b4-d7a1-1748-0c1a-f96a58d7b4a8
+	fromColumn: Cash_Receipt_Journal.Date
+	toColumn: DimDate.Date
+
+relationship f293cb5c-014c-e0e5-3a20-c7d28dcddabc
+	fromColumn: Fact_Budget.Location
+	toColumn: Dim_Regionals.'Sage ID'
+
+relationship e73d4491-3dbf-8fd6-c8a6-6fd044cc18e1
+	fromColumn: Fact_Budget.Calendar
+	toColumn: DimDate.Date
+
+relationship ad41f94f-688c-48ec-9aed-ef7804610d97
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Fact_TB.Date
+	toColumn: LocalDateTable_ff920742-b35b-424c-b9a7-035e228d00ed.Date
+
+relationship a3fc83a8-ab63-1677-f728-f5f23d3fe77f
+	fromColumn: Fact_TB.Location
+	toColumn: Dim_Regionals.'Sage ID'
+

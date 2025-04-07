@@ -1,0 +1,280 @@
+table Cash_Receipt_Journal
+	lineageTag: 2dd52f47-adc4-4691-84b7-1d18c408a724
+
+	measure Total_Collected = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			VAR TotalCollected_Sage = SUMX('Cash_Receipt_Journal', 'Cash_Receipt_Journal'[Credit Amount])
+			VAR TotalCollected_Yardi = SUMX('Cash_Receipt_Journal', 'Cash_Receipt_Journal'[Amount])
+			
+			RETURN 
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the sum of both
+			    TotalCollected_Sage + TotalCollected_Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", TotalCollected_Sage,
+			        "Yardi", TotalCollected_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 1f99a203-b897-4d45-8f6a-8549c77541fc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Net_Collected_Efficiency = DIVIDE([Total_Collected], [Total_Billed])
+		lineageTag: 59ddb949-e2a2-45fb-8c4e-bb2d935f2a49
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Net_Amt_Collected = [Total_Billed] - [Current_Owed]
+		lineageTag: 016292b4-cb9b-4e36-85a8-7b8d74af2d32
+
+	measure Portfolio_Net_Collected_Efficiency% = DIVIDE(CALCULATE([Total_Collected], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Total_Billed], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+		lineageTag: 4d650ec4-e276-4197-a32e-82e8e039f4cf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Collection_Efficiency = DIVIDE([Net_Amt_Collected], [Total_Billed])
+		lineageTag: df499df3-ff9d-4761-a409-fcaf9dbba39a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Accounting Software'
+		dataType: string
+		lineageTag: f51aeb8f-18be-4b77-8ed1-ae1dda550ba6
+		summarizeBy: none
+		sourceColumn: Accounting Software
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Property Description'
+		dataType: string
+		lineageTag: 6370eb03-7913-466b-8c30-8c13b2c5d6fd
+		summarizeBy: none
+		sourceColumn: Property Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Apt#
+		dataType: string
+		lineageTag: 4f2f3cb4-a6d0-45a9-9c4e-9b0755387008
+		summarizeBy: none
+		sourceColumn: Apt#
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tenant Name'
+		dataType: string
+		lineageTag: 31551683-d063-4515-b1da-ce785805d011
+		summarizeBy: none
+		sourceColumn: Tenant Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Event Date'
+		dataType: string
+		lineageTag: a5e22863-3c31-4b0d-98c1-dbe8b723b958
+		summarizeBy: none
+		sourceColumn: Event Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Payment Method'
+		dataType: string
+		lineageTag: 526dcc5d-a7cf-494f-949b-e6549746a6f2
+		summarizeBy: none
+		sourceColumn: Payment Method
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Chk Number'
+		dataType: string
+		lineageTag: 03b99763-dfbd-4f1e-af97-c4c3fafb8139
+		summarizeBy: none
+		sourceColumn: Chk Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Batch ID'
+		dataType: string
+		lineageTag: bf36999e-3e08-4f0e-a823-7cca7cbd3f3f
+		summarizeBy: none
+		sourceColumn: Batch ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Amount
+		dataType: double
+		lineageTag: da940b65-8be7-4cc5-ac2f-4f4e35885835
+		summarizeBy: sum
+		sourceColumn: Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Memo
+		dataType: string
+		lineageTag: 7337dbcb-f7db-4072-ad6e-4e36a45c30b0
+		summarizeBy: none
+		sourceColumn: Memo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Charge Date'
+		dataType: string
+		lineageTag: ce16ab80-5e9a-48a0-a57e-62c07361f39d
+		summarizeBy: none
+		sourceColumn: Charge Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: f893c0fc-1bc2-4e06-bb37-37b4bca181b0
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Credit Amount'
+		dataType: double
+		lineageTag: c0904fe5-9724-477d-ad2e-7c5e1b64b0e1
+		summarizeBy: sum
+		sourceColumn: Credit Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Name
+		dataType: string
+		lineageTag: 5314eea7-ba85-413f-9624-8f46d966997e
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Property
+		dataType: string
+		lineageTag: 7e2d71d0-d1bd-4e8e-956e-b3a80489ea84
+		summarizeBy: none
+		sourceColumn: Property
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit
+		dataType: string
+		lineageTag: e3d1c8a1-ece6-4964-ade6-af987585eb8f
+		summarizeBy: none
+		sourceColumn: Unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tenant
+		dataType: string
+		lineageTag: 3391b86e-0fe9-4719-8954-76a32d948bdd
+		summarizeBy: none
+		sourceColumn: Tenant
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period
+		dataType: string
+		lineageTag: 7347c246-8bdf-44e5-9736-92ff59a282b7
+		summarizeBy: none
+		sourceColumn: Period
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check #'
+		dataType: string
+		lineageTag: 225d863e-6943-49a3-adf6-937f97856c36
+		summarizeBy: none
+		sourceColumn: Check #
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date2
+		dataType: string
+		lineageTag: 1c44636b-9206-438b-9dc4-e129edb0ba6b
+		summarizeBy: none
+		sourceColumn: Date2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'End of Month'
+		dataType: string
+		lineageTag: 592a518a-1207-40b2-accd-ddecb714fff8
+		summarizeBy: none
+		sourceColumn: End of Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date1
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 8ce292a8-5e9e-49c8-9d40-d0ab21792857
+		summarizeBy: none
+		sourceColumn: Date1
+
+		variation Variation
+			isDefault
+			relationship: 44c68f82-c35c-4bce-81dd-3280555aaa75
+			defaultHierarchy: LocalDateTable_7955377b-031b-4b70-bff5-81edcfabbc73.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c5252b8b-16db-4ba8-bf8c-4bc559ace0c6
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Cash_Receipt_Journal = m
+		mode: import
+		queryGroup: 'Cash Receipt Journal'
+		source = ```
+				let
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    Navigation = Table.SelectRows(Source, each Text.Contains([Folder Path], "Receipt", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files") or Text.Contains([Folder Path], "Yardi") and Text.Contains([Folder Path], "Deposit summary") ),
+				    #"Accounting Software Col" = Table.AddColumn(Navigation, "Accounting Software", each if Text.Contains([Folder Path], "Yardi") then "Yardi" else "Sage"),
+				    #"Invoke Custom Column" = Table.AddColumn(#"Accounting Software Col", "Tables", each if Text.Contains([Accounting Software], "Yardi") then DepositSummary_yardi([Content]) else Cash_Receipt_Journal_Sage([Content])),
+				    Datecol = Table.AddColumn(#"Invoke Custom Column", "Date1", each 
+				    if [Accounting Software] = "Sage" then
+				        let
+				            Date = Text.BetweenDelimiters([Name], "_", "."),
+				            Month = Number.From(Text.Start(Date, 2)),
+				            Year = 2000 + Number.From(Text.End(Date, 2)),
+				            Period = Date.EndOfMonth(#date(Year, Month, 1))
+				        in
+				            Period
+				    else 
+				      null // Or replace with an alternative calculation
+				),
+				    #"Removed Other Columns" = Table.SelectColumns(Datecol,{"Accounting Software", "Tables", "Date1"}),
+				    #"Expanded Tables" = Table.ExpandTableColumn(#"Removed Other Columns", "Tables", {"Property Description", "Apt#", "Tenant Name", "Event Date", "Payment Method", "Chk Number", "Batch ID", "Amount", "Memo", "Charge Date", "Description", "Credit Amount", "Name", "Property", "Unit", "Tenant", "Period", "Check #", "Date", "End of Month"}, {"Property Description", "Apt#", "Tenant Name", "Event Date", "Payment Method", "Chk Number", "Batch ID", "Amount", "Memo", "Charge Date", "Description", "Credit Amount", "Name", "Property", "Unit", "Tenant", "Period", "Check #", "Date2", "End of Month"}),
+				    #"Property Description column" = Table.TransformColumns(#"Expanded Tables" , {"Property Description", each Text.BeforeDelimiter(_," (")}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Property Description column", "Date", each if [Date1] <> null then [Date1] else if [Date2] <> null then [Date2] else null),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added Conditional Column",{{"Date1", type date}, {"Amount", type number}, {"Credit Amount", type number}, {"Date", type date}})
+				in
+				    #"Changed Type"
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

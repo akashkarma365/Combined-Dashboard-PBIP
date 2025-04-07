@@ -1,0 +1,50 @@
+table 'Actuals Vs Budget'
+	lineageTag: 9e928725-5912-43dc-89dd-0e36003011e0
+
+	column 'Actuals Vs Budget'
+		lineageTag: 8977c32c-f907-44b1-a22c-e33867d3725d
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Actuals Vs Budget Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Actuals Vs Budget Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Actuals Vs Budget Fields'
+		isHidden
+		lineageTag: 59caa17f-ff28-4ec0-8e48-13a6c3ddd896
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Actuals Vs Budget Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Actuals Vs Budget Order'
+		isHidden
+		formatString: 0
+		lineageTag: c833d180-916a-4e9e-ae2d-1c313869f0ef
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Actuals Vs Budget' = calculated
+		mode: import
+		source = ```
+				{
+				    ("NOI", NAMEOF(Fact_Budget[Budgeted_NOI]), 0),
+				    ("Rent", NAMEOF(Fact_Budget[Budget_Rent]), 1),
+				    ("Controllable Exp", NAMEOF(Fact_Budget[Budgeted_Controllable_Exp]),2)    
+				}
+				```
+
+	annotation PBI_Id = e4da62dcc4484c4bb56fd6607d0fde31
+

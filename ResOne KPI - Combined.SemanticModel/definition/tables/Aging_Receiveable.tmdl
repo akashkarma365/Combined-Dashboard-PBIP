@@ -1,0 +1,948 @@
+table Aging_Receiveable
+	lineageTag: ea1267cc-7de5-4170-90f5-78d22249071c
+
+	measure Delinquent_Over_30_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software]) 
+			
+			-- Sage Calculation
+			VAR SageValue = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[over_30]) + 
+			        SUM(Aging_Receiveable[over_60]) + 
+			        SUM(Aging_Receiveable[over_90]) + 
+			        SUM(Aging_Receiveable[over_120]),
+			        Aging_Receiveable[Accounting Software] = "Sage"
+			    )
+			
+			-- Yardi Calculation
+			VAR YardiValue = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[31-60 Owed]) + 
+			        SUM(Aging_Receiveable[61-90 Owed]) + 
+			        SUM(Aging_Receiveable[Over 90 Owed])
+			    ) 
+			    + CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]), 
+			        Aging_Receiveable[Days] IN {"31-60 Owed", "61-90 Owed", "Over 90 Owed"}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the combined total
+			    SageValue + YardiValue,
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", SageValue,
+			        "Yardi", YardiValue,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 45a48ce8-ed13-4302-a965-3a55049c383f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Delinquent_Over_90_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software]) 
+			
+			-- Sage Calculation
+			VAR DelinquentOver90_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[over_90]) + SUM(Aging_Receiveable[over_120]),
+			        Aging_Receiveable[Accounting Software] = "Sage"
+			    )
+			
+			-- Yardi Calculation
+			VAR DelinquentOver90_Yardi =
+			    CALCULATE(
+			        SUM(Aging_Receiveable[Over 90 Owed])
+			    ) 
+			    + CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]), 
+			        Aging_Receiveable[Days] = "Over 90 Owed"
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    DelinquentOver90_Sage + DelinquentOver90_Yardi,
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", DelinquentOver90_Sage,
+			        "Yardi", DelinquentOver90_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 6896b50b-b68e-41ff-bd69-ff08904abb84
+
+	measure Total_Owed = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software]) 
+			
+			-- Sage Calculation
+			VAR TotalOwed_Sage = 
+			    SUM(Aging_Receiveable[current_amt]) +
+			    SUM(Aging_Receiveable[over_30]) +
+			    SUM(Aging_Receiveable[over_60]) +
+			    SUM(Aging_Receiveable[over_90]) +
+			    SUM(Aging_Receiveable[over_120])
+			
+			-- Yardi Calculation
+			VAR TotalOwed_Yardi = 
+			    SUM(Aging_Receiveable[0-30 Owed]) +
+			    SUM(Aging_Receiveable[31-60 Owed]) +
+			    SUM(Aging_Receiveable[61-90 Owed]) +
+			    SUM(Aging_Receiveable[Over 90 Owed]) +
+			    CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]), 
+			        Aging_Receiveable[Days] IN {"0-30 Owed", "31-60 Owed", "61-90 Owed", "Over 90 Owed"}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    COALESCE(TotalOwed_Sage, 0) + COALESCE(TotalOwed_Yardi, 0),
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", COALESCE(TotalOwed_Sage, 0),
+			        "Yardi", COALESCE(TotalOwed_Yardi, 0),
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: cf054ca5-b3a9-4416-b417-dcad182d7559
+
+	measure '% Delinquent_Over_30_Days' =
+			
+			DIVIDE([Delinquent_Over_30_Days],[Total_Owed])
+		lineageTag: 16c75e6c-e039-433f-b241-edcebe68f9e9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Delinquent_Over_90_Days' =
+			
+			DIVIDE([Delinquent_Over_90_Days],[Total_Owed])
+		lineageTag: e6b688f9-7d9a-42c3-b31d-1617191ed75f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Non_Subsidy_Portion = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software]) 
+			
+			-- Sage Calculation (Excludes "Subsidy" in Balance Type Description)
+			VAR NonSubsidy_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[current_amt]) + 
+			        SUM(Aging_Receiveable[over_30]) + 
+			        SUM(Aging_Receiveable[over_60]) + 
+			        SUM(Aging_Receiveable[over_90]) + 
+			        SUM(Aging_Receiveable[over_120]),
+			        NOT(CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "subsidy"))
+			    )
+			
+			-- Yardi Calculation (Excludes Charge Codes "tbs" and "tbssusp")
+			VAR NonSubsidy_Yardi = 
+			    CALCULATE(
+			        [Total_Owed], 
+			        NOT(Aging_Receiveable[Charge Code] IN {"tbs", "tbssusp"})
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    NonSubsidy_Sage + NonSubsidy_Yardi,
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", NonSubsidy_Sage,
+			        "Yardi", NonSubsidy_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: c3400be6-acac-43fc-a30f-2a36ab1f1315
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Subsidy_Portion = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software]) 
+			
+			-- Sage Calculation: Only includes "Subsidy" in Balance Type Description
+			VAR Subsidy_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[current_amt]) +
+			        SUM(Aging_Receiveable[over_30]) +
+			        SUM(Aging_Receiveable[over_60]) +
+			        SUM(Aging_Receiveable[over_90]) +
+			        SUM(Aging_Receiveable[over_120]),
+			        SEARCH("Subsidy", Aging_Receiveable[Balance Type  Description], 1, 0) > 0
+			    )
+			
+			-- Yardi Calculation: Only includes "tbs" and "tbssusp" charge codes
+			VAR Subsidy_Yardi = 
+			    CALCULATE(
+			        [Total_Owed], 
+			        Aging_Receiveable[Charge Code] IN {"tbs", "tbssusp"}
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    COALESCE(Subsidy_Sage, 0) + COALESCE(Subsidy_Yardi, 0),
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", COALESCE(Subsidy_Sage, 0),
+			        "Yardi", COALESCE(Subsidy_Yardi, 0),
+			        BLANK()
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 5050f1ba-601f-49fb-b837-7d20ecd725fb
+
+	measure Total_Owed_PM = ```
+			
+			    CALCULATE([Total_Owed],EDATE(Aging_Receiveable[Period],-1))
+			```
+		lineageTag: e070a6a8-ec60-428c-8438-5e6329f06759
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total_Owed_CM = ```
+			
+			    CALCULATE([Total_Owed],FILTER(Aging_Receiveable,Aging_Receiveable[Period] = MAX(Aging_Receiveable[Period])))
+			
+			```
+		lineageTag: fc839975-9a6a-43a4-87c7-4d52be33fa56
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Portfolio_Non_Subsidy_Portion %' = ```
+			
+			    DIVIDE(CALCULATE([Non_Subsidy_Portion], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Subsidy_Portion] + [Non_Subsidy_Portion], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+			 
+			```
+		lineageTag: 9a7abb6b-ed65-425f-9b28-380c9ac850be
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Portfolio_Subsidy_Portion %' = ```
+			
+			    DIVIDE(CALCULATE([Subsidy_Portion], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Subsidy_Portion] + [Non_Subsidy_Portion], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+			 
+			```
+		lineageTag: 566f5d59-6193-4e5d-8553-2d53e3312099
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Subsidy_Portion %' = ```
+			
+			DIVIDE([Subsidy_Portion], [Subsidy_Portion] + [Non_Subsidy_Portion])
+			
+			```
+		lineageTag: ef30d693-65c0-4e1b-8284-8445149889e4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Non_Subsidy_Portion %' = ```
+			
+			DIVIDE([Non_Subsidy_Portion], [Subsidy_Portion] + [Non_Subsidy_Portion])
+			
+			```
+		lineageTag: fe6be926-c54c-462f-ac26-a6426199355c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Portfolio_Delinquent_Over_30_Days' = ```
+			
+			    DIVIDE(CALCULATE([Delinquent_Over_30_Days], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Total_Owed], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+			
+			```
+		lineageTag: c5f2db9e-0c4f-4e2a-a4ff-a74f19943d0d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Portfolio_Delinquent_Over_90_Days' = ```
+			
+			    DIVIDE(CALCULATE([Delinquent_Over_90_Days], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])), CALCULATE([Total_Owed], ALL(Dim_Regionals[Final Name],Dim_Regionals[Owner],Dim_Regionals[Manager],Dim_Regionals[Regional])))
+			
+			
+			```
+		lineageTag: 716b1c4e-0b8a-4c2a-a128-571f79c29997
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Current_Owed =
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			VAR TotalOwed_Sage =
+			    CALCULATE(SUMX(Aging_Receiveable, Aging_Receiveable[current_amt]))
+			VAR TotalOwed_Yardi =
+			    CALCULATE(SUM(Aging_Receiveable[0-30 Owed]), Aging_Receiveable[Charge Code] IN {"con","rnt", "tbs", "tbssusp"})
+			    + CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]),
+			        Aging_Receiveable[Days] IN {"0-30 Owed"}
+			    )
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem),
+			    -- If no selection, return the sum of both
+			    TotalOwed_Sage + TotalOwed_Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", TotalOwed_Sage,
+			        "Yardi",TotalOwed_Yardi,
+			        BLANK()
+			    )
+			)
+		lineageTag: fd0d6fb0-53de-4a56-b52c-9b92fda26ad5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Current_Owe = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			-- Sage Calculation
+			VAR CurrentOwe_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[current_amt]),
+			        FILTER(
+			            Aging_Receiveable,
+			            Aging_Receiveable[Balance Type  Description] IN {
+			                "Concession - 1st Month Prorate -", 
+			                "Credit - Refunded deposit -", 
+			                "Management Used Unit -", 
+			                "Rent -"
+			            } 
+			            || CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "subsidy") 
+			            || CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "unapplied")
+			            || CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "concession")
+			            || CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "rent")
+			            || CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "management used")
+			            || CONTAINSSTRING(LOWER(Aging_Receiveable[Balance Type  Description]), "credit - refund")
+			        )
+			    )
+			
+			-- Yardi Calculation
+			VAR CurrentOwe_Yardi =
+			    CALCULATE(
+			        SUM(Aging_Receiveable[0-30 Owed]), 
+			        Aging_Receiveable[Charge Code] IN {"con", "rnt", "tbs", "tbssusp"}
+			    ) 
+			    + CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]), 
+			        Aging_Receiveable[Days] = "0-30 Owed"
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no system is selected, show the combined total
+			    CurrentOwe_Sage + CurrentOwe_Yardi,
+			    -- If a system is selected, return the corresponding value
+			    SWITCH(
+			        SelectedSystem, 
+			        "Sage", CurrentOwe_Sage,
+			        "Yardi", CurrentOwe_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: ee83260e-3f90-4527-b04d-919875f98b85
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Over_30_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			-- Sage Calculation
+			VAR TotalOwed_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[over_30])
+			    )
+			
+			-- Yardi Calculation
+			VAR TotalOwed_Yardi = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[0-30 Owed])
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN 
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    COALESCE(TotalOwed_Sage, 0) + COALESCE(TotalOwed_Yardi, 0),
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", COALESCE(TotalOwed_Sage, 0),
+			        "Yardi", COALESCE(TotalOwed_Yardi, 0),
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 04fb13e5-95d7-45cc-9f37-8f9e8ec6d52a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Over_60_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			-- Sage Calculation
+			VAR TotalOwed_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[over_60])
+			    )
+			
+			-- Yardi Calculation
+			VAR TotalOwed_Yardi = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[31-60 Owed])
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN 
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    COALESCE(TotalOwed_Sage, 0) + COALESCE(TotalOwed_Yardi, 0),
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", COALESCE(TotalOwed_Sage, 0),
+			        "Yardi", COALESCE(TotalOwed_Yardi, 0),
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 14430436-81f6-4da9-b7e7-04d128c583b1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Over_90_Days = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			-- Sage Calculation
+			VAR TotalOwed_Sage = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[over_90])
+			    )
+			
+			-- Yardi Calculation
+			VAR TotalOwed_Yardi = 
+			    CALCULATE(
+			        SUM(Aging_Receiveable[61-90 Owed])
+			    )
+			
+			-- Final Output Based on Selection
+			RETURN 
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return combined total
+			    COALESCE(TotalOwed_Sage, 0) + COALESCE(TotalOwed_Yardi, 0),
+			    -- If a system is selected, return corresponding value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", COALESCE(TotalOwed_Sage, 0),
+			        "Yardi", COALESCE(TotalOwed_Yardi, 0),
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: a3e32ac1-801c-4a74-9ced-f976daa47d02
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total_Current_Owed = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			VAR TotalOwed_Sage = [Billed] - [Net_Collected]
+			VAR TotalOwed_Yardi = [Billed] - [Net_Collected]
+			
+			RETURN 
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the sum of both
+			    TotalOwed_Sage + TotalOwed_Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", TotalOwed_Sage,
+			        "Yardi", TotalOwed_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 406b4d1e-a395-4a27-85d0-c776929d08c6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure pre = ```
+			CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]), 
+			        Aging_Receiveable[Days] IN {"0-30 Owed"}
+			        )
+			```
+		lineageTag: 628e9954-0b23-4d1c-a422-ddac48e78792
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Current Owed' = ```
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			
+			VAR TotalOwed_Sage = [Billed] - [Net Collected]
+			VAR TotalOwed_Yardi = [Billed] - [Net Collected]
+			
+			RETURN 
+			IF(
+			    ISBLANK(SelectedSystem), 
+			    -- If no selection, return the sum of both
+			    TotalOwed_Sage + TotalOwed_Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", TotalOwed_Sage,
+			        "Yardi", TotalOwed_Yardi,
+			        BLANK()
+			    )
+			)
+			
+			```
+		lineageTag: 3e69083f-e47d-44d9-a324-51df3fa4a965
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current_Owed_collection efficiency' =
+			
+			VAR SelectedSystem = SELECTEDVALUE(Aging_Receiveable[Accounting Software])
+			VAR TotalOwed_Sage =
+			    CALCULATE(SUMX(Aging_Receiveable, Aging_Receiveable[current_amt]))
+			VAR TotalOwed_Yardi =
+			    CALCULATE(SUM(Aging_Receiveable[0-30 Owed]))
+			    + CALCULATE(
+			        SUM(Aging_Receiveable[Pre- payments]),
+			        Aging_Receiveable[Days] IN {"0-30 Owed"}
+			    )
+			RETURN
+			IF(
+			    ISBLANK(SelectedSystem),
+			    -- If no selection, return the sum of both
+			    TotalOwed_Sage + TotalOwed_Yardi,
+			    -- Otherwise, return the selected system’s value
+			    SWITCH(
+			        SelectedSystem,
+			        "Sage", TotalOwed_Sage,
+			        "Yardi",TotalOwed_Yardi,
+			        BLANK()
+			    )
+			)
+		lineageTag: fbbb6c92-f351-454d-b7ab-514faaab6f4c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Community Id'
+		dataType: string
+		lineageTag: 8d579d11-04b4-491a-956a-14f913f1b39c
+		summarizeBy: none
+		sourceColumn: Community Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Community Description'
+		dataType: string
+		lineageTag: 402c506a-07bf-4131-824d-c94940ec5c3d
+		summarizeBy: none
+		sourceColumn: Community Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Id'
+		dataType: int64
+		formatString: 0
+		lineageTag: ccb961db-4b28-4ca0-8506-4f85c48734d1
+		summarizeBy: count
+		sourceColumn: Unit Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Building Apartment Number'
+		dataType: string
+		lineageTag: 9051f9af-a970-4fab-996b-eb390c57acec
+		summarizeBy: none
+		sourceColumn: Building Apartment Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Household Id'
+		dataType: int64
+		formatString: 0
+		lineageTag: 66dbd5dc-a0dc-415c-a731-b16e3b9ff8ac
+		summarizeBy: count
+		sourceColumn: Household Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tenant Name'
+		dataType: string
+		lineageTag: b9667dda-9b98-48bb-91a5-af098c9792a9
+		summarizeBy: none
+		sourceColumn: Tenant Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Household Active'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 35b6ad91-d25b-4a3d-8b03-c58a51426be3
+		summarizeBy: none
+		sourceColumn: Household Active
+
+		annotation SummarizationSetBy = Automatic
+
+	column household_total_due
+		dataType: double
+		lineageTag: 8dc908cd-d04f-45af-85a8-c12b9ae2e761
+		summarizeBy: sum
+		sourceColumn: household_total_due
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Balance Type  Description'
+		dataType: string
+		lineageTag: d7e95a02-4854-4a3c-bedf-3429ac17f5b0
+		summarizeBy: none
+		sourceColumn: Balance Type  Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_amt
+		dataType: double
+		lineageTag: 0006d782-bb57-41ab-b4e1-1bfda852e084
+		summarizeBy: sum
+		sourceColumn: current_amt
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column over_30
+		dataType: double
+		lineageTag: 457a5f1b-432f-4e85-a7bc-04ef19e557f5
+		summarizeBy: sum
+		sourceColumn: over_30
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column over_60
+		dataType: double
+		lineageTag: cc02c136-03c0-426d-af51-a1170a8d8033
+		summarizeBy: sum
+		sourceColumn: over_60
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column over_90
+		dataType: double
+		lineageTag: 669c2c96-3bab-4ebc-a725-419ad6b32224
+		summarizeBy: sum
+		sourceColumn: over_90
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column over_120
+		dataType: double
+		lineageTag: cc69df14-07ec-463d-9fc6-57f40fbf9fea
+		summarizeBy: sum
+		sourceColumn: over_120
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Tenant
+		dataType: string
+		lineageTag: 16b09dcc-7d77-4d63-97b4-7da34bdeefea
+		summarizeBy: none
+		sourceColumn: Tenant
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tran#
+		dataType: string
+		lineageTag: 536c1373-f24f-4395-ba48-5fd784dd63a1
+		summarizeBy: none
+		sourceColumn: Tran#
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: string
+		lineageTag: 12721278-5a13-497e-b039-8d3ef579cc95
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 885233c7-4f09-43b1-800f-8e5b5be59175
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Charge Code'
+		dataType: string
+		lineageTag: 8e226d31-7631-4f1c-ab3d-025357263cdb
+		summarizeBy: none
+		sourceColumn: Charge Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Charge Amount'
+		dataType: double
+		lineageTag: b0a48c20-4666-483a-92e3-e2c099493fdf
+		summarizeBy: sum
+		sourceColumn: Charge Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Current Owed'
+		dataType: double
+		lineageTag: a7b6901e-87e0-4852-a49c-d20c5b614380
+		summarizeBy: sum
+		sourceColumn: Current Owed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '0-30 Owed'
+		dataType: double
+		lineageTag: 2212fecf-74d1-45ad-b266-21bef74c997c
+		summarizeBy: sum
+		sourceColumn: 0-30 Owed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '31-60 Owed'
+		dataType: double
+		lineageTag: 8e386a75-c8b3-4a2f-92fe-6efec5dc4231
+		summarizeBy: sum
+		sourceColumn: 31-60 Owed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '61-90 Owed'
+		dataType: double
+		lineageTag: ae14c9c0-0e33-482a-9e8b-2df923275617
+		summarizeBy: sum
+		sourceColumn: 61-90 Owed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Over 90 Owed'
+		dataType: double
+		lineageTag: 8cca8f7d-a185-481f-9120-5751f409078f
+		summarizeBy: sum
+		sourceColumn: Over 90 Owed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre- payments'
+		dataType: double
+		lineageTag: 5292cfcf-b37d-4649-a63a-fe960a258b7b
+		summarizeBy: sum
+		sourceColumn: Pre- payments
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Suspense
+		dataType: double
+		lineageTag: f0e638c1-b076-4b9d-a50c-976ba620d95e
+		summarizeBy: sum
+		sourceColumn: Suspense
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Remarks
+		dataType: string
+		lineageTag: 047726ee-4d88-44aa-aae9-e189f42e4b43
+		summarizeBy: none
+		sourceColumn: Remarks
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: d3a0b7d1-3e13-4478-a73f-b44ed8abc418
+		summarizeBy: none
+		sourceColumn: Period
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Accounting Software'
+		dataType: string
+		lineageTag: 3c5a21ca-87a2-4a26-a5b5-2daf8d0c4441
+		summarizeBy: none
+		sourceColumn: Accounting Software
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unapplied Tenants'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: c8c4a029-e772-4ccf-a9fa-f3e8c0d3a76f
+		summarizeBy: none
+		sourceColumn: Unapplied Tenants
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority
+		dataType: string
+		lineageTag: 15a2386b-6aaa-4ac7-a9fe-2d640a3de0d5
+		summarizeBy: none
+		sourceColumn: Priority
+
+		annotation SummarizationSetBy = Automatic
+
+	column Days
+		dataType: string
+		lineageTag: 77161923-5288-4e61-86cf-b3c19c087940
+		summarizeBy: none
+		sourceColumn: Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column Balance_Type_Description
+		dataType: string
+		lineageTag: 54afe2d4-4df6-48f3-9d88-ca3836267e72
+		summarizeBy: none
+		sourceColumn: Balance_Type_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Aging_Receiveable = m
+		mode: import
+		queryGroup: 'AR Aging'
+		source = ```
+				let
+				    // Connected to SharePoint
+				    Source = SharePoint.Files("https://equitymgmt1.sharepoint.com/teams/KPI", [ApiVersion = 15]),
+				    // Filtered files in "ar aging" folder (case-insensitive)
+				    Navigation = Table.SelectRows(Source, each Text.Contains([Folder Path], "ar aging", Comparer.OrdinalIgnoreCase) and Text.Contains([Folder Path],"Dashboard - Raw Data Files") or Text.Contains([Folder Path], "Yardi") and Text.Contains([Folder Path], "Delinquencies") ),
+				    // Loaded and promoted headers from Excel files
+				    TableTransform = Table.AddColumn(Navigation, "Table", each if Text.Contains([Folder Path], "Yardi", Comparer.OrdinalIgnoreCase) then Delinquency_Yardi([Content]) else Delinquency_Sage([Content])),
+				    #"Added Custom" = Table.AddColumn(TableTransform, "Accounting Software", each if Text.Contains([Folder Path], "Yardi") then "Yardi" else "Sage"),
+				    // Added "Period" column from file names
+				    PeriodCol = Table.AddColumn(#"Added Custom", "Period", each 
+				if [Accounting Software] = "Sage" then
+				    let
+				        ReportDate = Text.Trim(Text.BetweenDelimiters([Name],"aging_",".")),
+				        Year = 2000 + Number.From(Text.End(ReportDate,2)),
+				        Month = Number.From(Text.Start(ReportDate,2)),
+				        Date = Date.EndOfMonth(#date(Year,Month,01))
+				    in
+				        Date
+				else
+				    let
+				        ReportDate = Text.Trim(Text.BetweenDelimiters([Name],"-",".")),
+				        Year = 2000 + Number.From(Text.End(ReportDate,2)),
+				        Month = Number.From(Text.Start(ReportDate,2)),
+				        Date = Date.StartOfMonth(#date(Year,Month,01))
+				    in
+				        Date
+				, type date),
+				    #"Removed Other Columns" = Table.SelectColumns(PeriodCol,{"Table", "Period", "Accounting Software"}),
+				    ExpandedTable = Table.ExpandTableColumn(#"Removed Other Columns", "Table", {"Community Id", "Community Description", "Unit Id", "Building Apartment Number", "Household Id", "Tenant Name", "Household Active", "household_total_due", "Balance Type  Description", "current_amt", "over_30", "over_60", "over_90", "over_120", "Tenant", "Tran#", "Date", "Month", "Charge Code", "Charge Amount", "Current Owed", "0-30 Owed", "31-60 Owed", "61-90 Owed", "Over 90 Owed", "Pre- payments", "Suspense", "Remarks"}, {"Community Id", "Community Description", "Unit Id", "Building Apartment Number", "Household Id", "Tenant Name", "Household Active", "household_total_due", "Balance Type  Description", "current_amt", "over_30", "over_60", "over_90", "over_120", "Tenant", "Tran#", "Date", "Month", "Charge Code", "Charge Amount", "Current Owed", "0-30 Owed", "31-60 Owed", "61-90 Owed", "Over 90 Owed", "Pre- payments", "Suspense", "Remarks"}),
+				    ChangedType = Table.TransformColumnTypes(ExpandedTable,{{"Community Id", type text}, {"Community Description", type text}, {"Unit Id", Int64.Type}, {"Building Apartment Number", type any}, {"Household Id", Int64.Type}, {"Tenant Name", type text}, {"Household Active", type logical}, {"household_total_due", type number}, {"Balance Type  Description", type text}, {"current_amt", type number}, {"over_30", type number}, {"over_60", type number}, {"over_90", type number}, {"over_120", type number}, {"Tenant", type any}, {"Tran#", type any}, {"Date", type any}, {"Month", type any}, {"Charge Code", type any}, {"Charge Amount", type number}, {"Current Owed", type number}, {"0-30 Owed", type number}, {"31-60 Owed", type number}, {"61-90 Owed", type number}, {"Over 90 Owed", type number}, {"Pre- payments", type number}, {"Suspense", type number}, {"Remarks", type any}, {"Period", type date}, {"Accounting Software", type text}}),
+				   // Merged with "Dim_Unapplied" on "Tenant Name" and "Period"
+				    MergedDimUnapplied = Table.NestedJoin(ChangedType, {"Tenant Name", "Period"}, Dim_Unapplied, {"Tenant Name", "Period"}, "Dim_Unapplied", JoinKind.LeftOuter),
+				    #"Expanded Dim_Unapplied" = Table.ExpandTableColumn(MergedDimUnapplied, "Dim_Unapplied", {"UnappliedCheck", "Priority"}, {"Unapplied Tenants", "Priority"}),
+				    DaysCol = Table.AddColumn(#"Expanded Dim_Unapplied", "Days", each 
+				        let
+				            Days = if [Accounting Software] = "Yardi" and [Date] <> null 
+				                    then Duration.Days([Period] - Date.From(Text.Middle([Date], 6, 4) & "-" & Text.Middle([Date], 3, 2) & "-" & Text.Middle([Date], 0, 2))) 
+				                    else null
+				                    ,
+				            Result = if Days = null then null else
+				                    if Days >= 31 and Days <= 60 then "31-60 Owed" else
+				                    if Days >= 61 and Days <= 90 then "61-90 Owed" else
+				                    if Days > 90 then "Over 90 Owed" else "0-30 Owed"
+				        in
+				            Result
+				        ),
+				    MergedBalanceTypeCol = Table.AddColumn(DaysCol, "Balance_Type_Description", each if [Balance Type  Description] <> null then [Balance Type  Description] else if [Charge Code] <> null then [Charge Code] else null)
+				in
+				    MergedBalanceTypeCol
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
